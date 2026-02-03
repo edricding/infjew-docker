@@ -13,7 +13,7 @@
 (function (exports) {
     'use strict';
 
-    var
+    var // functions
         extend,
         createElements,
         createCountdownElt,
@@ -260,7 +260,7 @@
                 }
             };
 
-
+            // Refresh immediately to prevent a Flash of Unstyled Content
             refresh();
             interval = window.setInterval(refresh, parameters.refresh);
         });

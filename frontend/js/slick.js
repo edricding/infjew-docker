@@ -1,5 +1,5 @@
 
-
+// Product Image Slider 
 $('.product-image-slider').slick({
     slidesToShow: 1,
     slidesToScroll: 1,

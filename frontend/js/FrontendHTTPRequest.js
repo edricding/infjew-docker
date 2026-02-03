@@ -5,16 +5,16 @@ window.addEventListener("DOMContentLoaded", function () {
   GetPreciousList();
 
   document.body.addEventListener("click", function (event) {
-
+    // 检查点击的元素是否是 .jump-to-new
     if (event.target.closest(".jump-to-new")) {
       const clickedElement = event.target.closest(".jump-to-new");
 
-
+      // 判断是否有 "sold-out-active" 类
       if (!clickedElement.classList.contains("sold-out-active")) {
-
+        // 获取 data-jump 属性的值
         const jumpUrl = clickedElement.dataset.jump;
 
-
+        // 如果 url 存在，则打开新页面
         if (jumpUrl) {
           window.open(jumpUrl, "_blank");
         }
@@ -24,25 +24,25 @@ window.addEventListener("DOMContentLoaded", function () {
 });
 
 function GetBanner() {
-  fetch("/api/public/banners")
+  fetch("https://www.infjew.com/api/public/banners")
     .then((res) => res.json())
     .then((data) => {
       if (!data.success || !Array.isArray(data.data)) {
-        console.error("猫聨路氓聫聳 banner 氓陇卤猫麓楼:", data.message);
+        console.error("获取 banner 失败:", data.message);
         return;
       }
       console.log("data", data);
       const carousel = $(".hero-area-slider");
       console.log("$carousel", carousel);
 
-
+      // ✅ 1. 销毁旧的 owlCarousel（如果已经初始化）
       if (carousel.hasClass("owl-loaded")) {
         carousel.trigger("destroy.owl.carousel");
-        carousel.html("");
-        carousel.removeClass("owl-loaded owl-hidden");
+        carousel.html(""); // 清空 DOM
+        carousel.removeClass("owl-loaded owl-hidden"); // 干净移除 class
       }
 
-
+      // ✅ 2. 动态添加每一个 slide
       data.data.forEach((banner) => {
         const slideHtml = `
         <div class="single-slide-item">
@@ -70,7 +70,7 @@ function GetBanner() {
         carousel.append(slideHtml);
       });
 
-
+      // ✅ 3. 重新初始化 Owl Carousel
       carousel.owlCarousel({
         items: 1,
         loop: true,
@@ -82,31 +82,31 @@ function GetBanner() {
       });
     })
     .catch((err) => {
-      console.error("猫炉路忙卤聜 banner 氓聡潞茅聰聶:", err);
+      console.error("请求 banner 出错:", err);
     });
 }
 
 function GetCountingDown() {
-  fetch("/api/public/countingdown")
+  fetch("https://www.infjew.com/api/public/countingdown")
     .then((res) => res.json())
     .then((data) => {
       if (!data.success || !data.data || data.data.length === 0) {
-        console.error("忙聴聽氓聙聮猫庐隆忙聴露忙聲掳忙聧庐氓聫炉氓卤聲莽陇潞");
+        console.error("无倒计时数据可展示");
         return;
       }
 
-      const item = data.data[0];
+      const item = data.data[0]; // 取第一个商品
 
       const container = document.getElementById("countingdownContainer");
       if (!container) return;
 
-
+      // 更新标题和折扣信息
       container.querySelector(
         "h4"
       ).innerHTML = `Precious Sale <span>${item.percentage} Off</span>`;
       container.querySelector("h2").textContent = item.title;
 
-
+      // 更新评分
       const ratingEl = container.querySelector(".item-rating");
       ratingEl.innerHTML = "";
       for (let i = 0; i < 5; i++) {
@@ -115,33 +115,33 @@ function GetCountingDown() {
         ratingEl.appendChild(star);
       }
 
-
+      // 更新价格
       const priceEl = container.querySelector(".item-price p");
       priceEl.innerHTML = `$${item.discount} <span>$${item.price}</span>`;
 
-
+      // 更新按钮链接
       const goBtn = document.getElementById("go-for-it-btn");
       if (goBtn) {
         goBtn.href = item.url;
       }
 
-
+      // 更新图片
       const imgEl = document.querySelector(".countdown-img img");
       if (imgEl) {
         imgEl.src = item.picurl;
       }
 
-
+      // 初始化倒计时
       const ddl = new Date(item.ddl);
-
-
-
-
-
-
-
-
-
+      //   simplyCountdown(".simply-countdown-one", {
+      //     year: ddl.getFullYear(),
+      //     month: ddl.getMonth() + 1,
+      //     day: ddl.getDate(),
+      //     hours: ddl.getHours(),
+      //     minutes: ddl.getMinutes(),
+      //     seconds: ddl.getSeconds(),
+      //     enableUtc: false,
+      //   });
 
       simplyCountdown(".simply-countdown-one", {
         year: ddl.getFullYear(),
@@ -150,22 +150,22 @@ function GetCountingDown() {
       });
     })
     .catch((err) => {
-      console.error("猫聨路氓聫聳氓聙聮猫庐隆忙聴露忙聲掳忙聧庐氓陇卤猫麓?", err);
+      console.error("获取倒计时数据失败:", err);
     });
 }
 
 function GetPreciousList() {
-  fetch("/api/public/preciouslist")
+  fetch("https://www.infjew.com/api/public/preciouslist")
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
         renderProducts(data.data);
       } else {
-        console.error("忙聲掳忙聧庐猫聨路氓聫聳氓陇卤猫麓楼");
+        console.error("数据获取失败");
       }
     })
     .catch((error) => {
-      console.error("猫炉路忙卤聜氓陇卤猫麓楼:", error);
+      console.error("请求失败:", error);
     });
 }
 
@@ -174,15 +174,15 @@ function renderProducts(products) {
   const tabContainer = document.querySelector("#newArrivalTabContainer");
   const tabContent = document.querySelector("#nav-tabContent");
 
-
+  // 清空现有内容
   allProductsContainer.innerHTML = "";
   tabContainer.innerHTML = "";
   tabContent.innerHTML = "";
 
-
+  // 动态分类：根据 tag 分类产品
   const categorizedProducts = categorizeProductsByTag(products);
 
-
+  // 创建 All 分类
   const allTabButton = document.createElement("button");
   allTabButton.classList.add("nav-link", "active");
   allTabButton.id = "all-products-tab";
@@ -209,7 +209,7 @@ function renderProducts(products) {
   allTabPane.appendChild(allRow);
   tabContent.appendChild(allTabPane);
 
-
+  // 创建其他分类 Tabs
   for (const [tag, productsInCategory] of Object.entries(categorizedProducts)) {
     const tabButton = document.createElement("button");
     tabButton.classList.add("nav-link");
@@ -239,7 +239,7 @@ function renderProducts(products) {
   }
 }
 
-
+// 根据 tag 分类产品
 function categorizeProductsByTag(products) {
   const categorized = {};
 
@@ -261,7 +261,7 @@ function createProductCard(product) {
   card.classList.add("top-product-wrapper", "jump-to-new");
   card.dataset.jump = product.url;
 
-
+  // 判断是否为 "Sold out" 状态
   const isSoldOut = product.status === 0;
   if (isSoldOut) {
     card.classList.add("sold-out-active");
@@ -275,7 +275,7 @@ function createProductCard(product) {
     "align-items-center"
   );
 
-
+  // 如果是售罄，添加售罄标签
   if (isSoldOut) {
     const soldOut = document.createElement("div");
     soldOut.classList.add("sold-out-inner");
@@ -290,7 +290,7 @@ function createProductCard(product) {
   image.alt = product.title;
   imageWrapper.appendChild(image);
 
-
+  // 如果 status 为 2，添加折扣标签
   if (product.status === 2 && product.discount < product.price) {
     const discountPercentage = Math.floor(
       ((product.price - product.discount) / product.price) * 100
