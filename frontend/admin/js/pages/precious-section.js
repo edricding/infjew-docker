@@ -3,7 +3,7 @@ window.countingDown = [];
 
 
 window.addEventListener("DOMContentLoaded", function () {
-  fetch("https:
+  fetch("/api/banners", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -25,7 +25,7 @@ window.addEventListener("DOMContentLoaded", function () {
       console.error(":", error);
     });
 
-  fetch("https:
+  fetch("/api/countingdown", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -74,8 +74,8 @@ window.addEventListener("DOMContentLoaded", function () {
   document.addEventListener("click", function (e) {
     const target = e.target;
     if (target && target.id === "add-banner-btn") {
-      fetch("https:
-        method: "POST",
+      fetch("/api/banner/create", {
+    method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -248,8 +248,8 @@ function renderCountingDownTable(data) {
     if (target && target.id === "save-countingdown-precious-btn") {
       const updatedData = getCountingDownPreciousForm();
 
-      fetch("https:
-        method: "POST",
+      fetch("/api/countingdown/update", {
+    method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -262,8 +262,8 @@ function renderCountingDownTable(data) {
             console.log(" ");
 
 
-            fetch("https:
-              method: "GET",
+            fetch("/api/countingdown", {
+    method: "GET",
               headers: {
                 "Content-Type": "application/json",
               },
@@ -381,7 +381,7 @@ function toggleAddBannerButton(data) {
 }
 
 function deleteBanner(bannerId) {
-  fetch("https:
+  fetch("/api/banner/delete", {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",

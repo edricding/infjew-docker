@@ -78,7 +78,7 @@ function clearPreciousForm() {
 }
 
 function fetchAndRenderPreciousList() {
-  return fetch("https:
+  return fetch("/api/preciouslist", {
     method: "GET",
     credentials: "include",
   })
@@ -371,8 +371,8 @@ function addEventListenerAfterDOMLoaded() {
       buttonsStyling: false,
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch("https:
-          method: "POST",
+        fetch("/api/preciouslist/delete", {
+    method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: id }),
@@ -420,7 +420,7 @@ function formatPreciousListData(data) {
 
 function AddPreciousList(e) {
 
-  fetch("https:
+  fetch("/api/preciouslist/create", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -442,7 +442,7 @@ function AddPreciousList(e) {
 }
 
 function UpdatePreciousList(e) {
-  fetch(`https:
+  fetch("/api/preciouslist/update", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
