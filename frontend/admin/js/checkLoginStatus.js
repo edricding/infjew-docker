@@ -9,8 +9,8 @@ window.addEventListener("DOMContentLoaded", function () {
         window.location.href = "/login";
         return;
       }
-      // Only show page after auth passes.
-      document.body.style.display = "";
+      // Show page only after auth passes.
+      document.documentElement.style.visibility = "visible";
     })
     .catch((err) => {
       console.error("Session check failed", err);
