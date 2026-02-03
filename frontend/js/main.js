@@ -617,7 +617,7 @@
           console.log(message);
         })
         .catch((error) => {
-          console.error("获取 IP 失败", error);
+          console.error("è·å IP å¤±è´¥", error);
         });
     }
   });

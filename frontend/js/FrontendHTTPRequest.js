@@ -5,16 +5,16 @@ window.addEventListener("DOMContentLoaded", function () {
   GetPreciousList();
 
   document.body.addEventListener("click", function (event) {
-    // 检查点击的元素是否�?.jump-to-new
+    // æ£æ¥ç¹å»çåç´ æ¯å¦æ?.jump-to-new
     if (event.target.closest(".jump-to-new")) {
       const clickedElement = event.target.closest(".jump-to-new");
 
-      // 判断是否�?"sold-out-active" �?
+      // å¤æ­æ¯å¦æ?"sold-out-active" ç±?
       if (!clickedElement.classList.contains("sold-out-active")) {
-        // 获取 data-jump 属性的�?
+        // è·å data-jump å±æ§çå?
         const jumpUrl = clickedElement.dataset.jump;
 
-        // 如果 url 存在，则打开新页�?
+        // å¦æ url å­å¨ï¼åæå¼æ°é¡µé?
         if (jumpUrl) {
           window.open(jumpUrl, "_blank");
         }
@@ -28,21 +28,21 @@ function GetBanner() {
     .then((res) => res.json())
     .then((data) => {
       if (!data.success || !Array.isArray(data.data)) {
-        console.error("获取 banner 失败:", data.message);
+        console.error("è·å banner å¤±è´¥:", data.message);
         return;
       }
       console.log("data", data);
       const carousel = $(".hero-area-slider");
       console.log("$carousel", carousel);
 
-      // �?1. 销毁旧�?owlCarousel（如果已经初始化�?
+      // â?1. éæ¯æ§ç?owlCarouselï¼å¦æå·²ç»åå§åï¼?
       if (carousel.hasClass("owl-loaded")) {
         carousel.trigger("destroy.owl.carousel");
-        carousel.html(""); // 清空 DOM
-        carousel.removeClass("owl-loaded owl-hidden"); // 干净移除 class
+        carousel.html(""); // æ¸ç©º DOM
+        carousel.removeClass("owl-loaded owl-hidden"); // å¹²åç§»é¤ class
       }
 
-      // �?2. 动态添加每一�?slide
+      // â?2. å¨ææ·»å æ¯ä¸ä¸?slide
       data.data.forEach((banner) => {
         const slideHtml = `
         <div class="single-slide-item">
@@ -70,7 +70,7 @@ function GetBanner() {
         carousel.append(slideHtml);
       });
 
-      // �?3. 重新初始�?Owl Carousel
+      // â?3. éæ°åå§å?Owl Carousel
       carousel.owlCarousel({
         items: 1,
         loop: true,
@@ -82,7 +82,7 @@ function GetBanner() {
       });
     })
     .catch((err) => {
-      console.error("请求 banner 出错:", err);
+      console.error("è¯·æ± banner åºé:", err);
     });
 }
 
@@ -91,22 +91,22 @@ function GetCountingDown() {
     .then((res) => res.json())
     .then((data) => {
       if (!data.success || !data.data || data.data.length === 0) {
-        console.error("无倒计时数据可展示");
+        console.error("æ åè®¡æ¶æ°æ®å¯å±ç¤º");
         return;
       }
 
-      const item = data.data[0]; // 取第一个商�?
+      const item = data.data[0]; // åç¬¬ä¸ä¸ªåå?
 
       const container = document.getElementById("countingdownContainer");
       if (!container) return;
 
-      // 更新标题和折扣信�?
+      // æ´æ°æ é¢åææ£ä¿¡æ?
       container.querySelector(
         "h4"
       ).innerHTML = `Precious Sale <span>${item.percentage} Off</span>`;
       container.querySelector("h2").textContent = item.title;
 
-      // 更新评分
+      // æ´æ°è¯å
       const ratingEl = container.querySelector(".item-rating");
       ratingEl.innerHTML = "";
       for (let i = 0; i < 5; i++) {
@@ -115,23 +115,23 @@ function GetCountingDown() {
         ratingEl.appendChild(star);
       }
 
-      // 更新价格
+      // æ´æ°ä»·æ ¼
       const priceEl = container.querySelector(".item-price p");
       priceEl.innerHTML = `$${item.discount} <span>$${item.price}</span>`;
 
-      // 更新按钮链接
+      // æ´æ°æé®é¾æ¥
       const goBtn = document.getElementById("go-for-it-btn");
       if (goBtn) {
         goBtn.href = item.url;
       }
 
-      // 更新图片
+      // æ´æ°å¾ç
       const imgEl = document.querySelector(".countdown-img img");
       if (imgEl) {
         imgEl.src = item.picurl;
       }
 
-      // 初始化倒计�?
+      // åå§ååè®¡æ?
       const ddl = new Date(item.ddl);
       //   simplyCountdown(".simply-countdown-one", {
       //     year: ddl.getFullYear(),
@@ -150,7 +150,7 @@ function GetCountingDown() {
       });
     })
     .catch((err) => {
-      console.error("获取倒计时数据失�?", err);
+      console.error("è·ååè®¡æ¶æ°æ®å¤±è´?", err);
     });
 }
 
@@ -161,11 +161,11 @@ function GetPreciousList() {
       if (data.success) {
         renderProducts(data.data);
       } else {
-        console.error("数据获取失败");
+        console.error("æ°æ®è·åå¤±è´¥");
       }
     })
     .catch((error) => {
-      console.error("请求失败:", error);
+      console.error("è¯·æ±å¤±è´¥:", error);
     });
 }
 
@@ -174,15 +174,15 @@ function renderProducts(products) {
   const tabContainer = document.querySelector("#newArrivalTabContainer");
   const tabContent = document.querySelector("#nav-tabContent");
 
-  // 清空现有内容
+  // æ¸ç©ºç°æåå®¹
   allProductsContainer.innerHTML = "";
   tabContainer.innerHTML = "";
   tabContent.innerHTML = "";
 
-  // 动态分类：根据 tag 分类产品
+  // å¨æåç±»ï¼æ ¹æ® tag åç±»äº§å
   const categorizedProducts = categorizeProductsByTag(products);
 
-  // 创建 All 分类
+  // åå»º All åç±»
   const allTabButton = document.createElement("button");
   allTabButton.classList.add("nav-link", "active");
   allTabButton.id = "all-products-tab";
@@ -209,7 +209,7 @@ function renderProducts(products) {
   allTabPane.appendChild(allRow);
   tabContent.appendChild(allTabPane);
 
-  // 创建其他分类 Tabs
+  // åå»ºå¶ä»åç±» Tabs
   for (const [tag, productsInCategory] of Object.entries(categorizedProducts)) {
     const tabButton = document.createElement("button");
     tabButton.classList.add("nav-link");
@@ -239,7 +239,7 @@ function renderProducts(products) {
   }
 }
 
-// 根据 tag 分类产品
+// æ ¹æ® tag åç±»äº§å
 function categorizeProductsByTag(products) {
   const categorized = {};
 
@@ -261,7 +261,7 @@ function createProductCard(product) {
   card.classList.add("top-product-wrapper", "jump-to-new");
   card.dataset.jump = product.url;
 
-  // 判断是否�?"Sold out" 状�?
+  // å¤æ­æ¯å¦ä¸?"Sold out" ç¶æ?
   const isSoldOut = product.status === 0;
   if (isSoldOut) {
     card.classList.add("sold-out-active");
@@ -275,7 +275,7 @@ function createProductCard(product) {
     "align-items-center"
   );
 
-  // 如果是售罄，添加售罄标签
+  // å¦ææ¯å®ç½ï¼æ·»å å®ç½æ ç­¾
   if (isSoldOut) {
     const soldOut = document.createElement("div");
     soldOut.classList.add("sold-out-inner");
@@ -290,7 +290,7 @@ function createProductCard(product) {
   image.alt = product.title;
   imageWrapper.appendChild(image);
 
-  // 如果 status �?2，添加折扣标�?
+  // å¦æ status ä¸?2ï¼æ·»å ææ£æ ç­?
   if (product.status === 2 && product.discount < product.price) {
     const discountPercentage = Math.floor(
       ((product.price - product.discount) / product.price) * 100

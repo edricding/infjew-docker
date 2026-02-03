@@ -7,16 +7,16 @@ window.addEventListener("DOMContentLoaded", function () {
 });
 
 function fillEditForm(result) {
-  // 确保 result 有足够的字段
+  // ç¡®ä¿ result æè¶³å¤çå­æ®µ
   if (!result || result.length < 10) return;
 
-  // 填写对应字段
+  // å¡«åå¯¹åºå­æ®µ
   document.getElementById("edit-precious-id").value = result[0];
   document.getElementById("edit-precious-itemid").value = result[1];
   document.getElementById("edit-precious-title").value = result[2];
   document.getElementById("edit-precious-price").value = result[4];
 
-  // 根据 status�?-3）设置对�?radio
+  // æ ¹æ® statusï¼?-3ï¼è®¾ç½®å¯¹åº?radio
   const statusRadioId = `edit-statusRadio${result[7]}`;
   const radio = document.getElementById(statusRadioId);
   if (radio) {
@@ -24,10 +24,10 @@ function fillEditForm(result) {
     radio.setAttribute("checked", "checked");
   }
 
-  // 折扣逻辑
+  // ææ£é»è¾
   const discountInput = document.getElementById("edit-precious-discount");
   if (result[7] === 2) {
-    // status === 2 表示 Sale
+    // status === 2 è¡¨ç¤º Sale
     discountInput.disabled = false;
     discountInput.value = result[5] !== "-" ? result[5] : "";
   } else {
@@ -35,11 +35,11 @@ function fillEditForm(result) {
     discountInput.value = "";
   }
 
-  // 设置 Tag（如果有对应项）
+  // è®¾ç½® Tagï¼å¦ææå¯¹åºé¡¹ï¼
   const tagSelect = document.getElementById("edit-precious-tag");
-  tagSelect.value = result[3]; // 假设 result[2] �?"Stelluna" �?"Adornment"
+  tagSelect.value = result[3]; // åè®¾ result[2] æ?"Stelluna" æ?"Adornment"
 
-  // 设置 Ratings（默认为 5�?
+  // è®¾ç½® Ratingsï¼é»è®¤ä¸º 5ï¼?
   const ratingSelect = document.getElementById("edit-rating-select");
   for (let i = 0; i < ratingSelect.options.length; i++) {
     if (parseInt(ratingSelect.options[i].value) === result[6]) {
@@ -54,7 +54,7 @@ function fillEditForm(result) {
 }
 
 function clearPreciousForm() {
-  // 文本输入框清�?
+  // ææ¬è¾å¥æ¡æ¸ç©?
   document.getElementById("edit-precious-id").value = "";
   document.getElementById("edit-precious-itemid").value = "";
   document.getElementById("edit-precious-title").value = "";
@@ -63,16 +63,16 @@ function clearPreciousForm() {
   document.getElementById("edit-precious-url").value = "";
   document.getElementById("edit-precious-picture-url").value = "";
 
-  // 折扣�?disabled 状态恢复（可选）
+  // ææ£æ ?disabled ç¶ææ¢å¤ï¼å¯éï¼
   document.getElementById("edit-precious-discount").disabled = true;
 
-  // 单选框（statusRadio）全部取消选中
+  // åéæ¡ï¼statusRadioï¼å¨é¨åæ¶éä¸­
   document.querySelectorAll('input[name="statusRadio"]').forEach((radio) => {
     radio.checked = false;
     radio.removeAttribute("checked");
   });
 
-  // 下拉菜单重置为第一个选项
+  // ä¸æèåéç½®ä¸ºç¬¬ä¸ä¸ªéé¡¹
   document.getElementById("edit-precious-tag").selectedIndex = 0;
   document.getElementById("edit-rating-select").selectedIndex = 0;
 }
@@ -85,22 +85,22 @@ function fetchAndRenderPreciousList() {
     .then((res) => res.json())
     .then((data) => {
       if (!data.success) {
-        console.error("�?获取失败�?, data.message);
+        console.error("â?è·åå¤±è´¥ï¼?, data.message);
         return;
       }
 
-      // �?格式化并保存
+      // â?æ ¼å¼åå¹¶ä¿å­
       const formatted = formatPreciousListData(data.data);
       preciousListData = formatted;
 
-      // �?用格式化后的数据重新渲染
+      // â?ç¨æ ¼å¼ååçæ°æ®éæ°æ¸²æ
       reRenderPreciousList(formatted);
     });
 }
 
 function renderPreciousList(data) {
   const container = document.getElementById("table-gridjs");
-  container.innerHTML = ""; // 清空容器内容
+  container.innerHTML = ""; // æ¸ç©ºå®¹å¨åå®¹
 
   const preciousGrid = new gridjs.Grid({
     columns: [
@@ -174,7 +174,7 @@ function renderPreciousList(data) {
     pagination: { limit: 10 },
     sort: true,
     search: true,
-    data: data, // �?关键点：使用传入�?data，而不�?window.preciousListData
+    data: data, // â?å³é®ç¹ï¼ä½¿ç¨ä¼ å¥ç?dataï¼èä¸æ?window.preciousListData
   });
 
   preciousGrid.on("ready", () => {
@@ -196,10 +196,10 @@ function reRenderPreciousList(data) {
   container.classList.add("fade-out");
 
   setTimeout(() => {
-    renderPreciousList(data); // 原来的渲染逻辑
+    renderPreciousList(data); // åæ¥çæ¸²æé»è¾
     container.classList.remove("fade-out");
     container.classList.add("fade-in");
-  }, 300); // �?CSS transition 时间一�?
+  }, 300); // å?CSS transition æ¶é´ä¸è?
 }
 
 function addEventListenerAfterDOMLoaded() {
@@ -266,7 +266,7 @@ function addEventListenerAfterDOMLoaded() {
       const dataToSend = {
         itemid: preciousData.id,
         title: preciousData.title,
-        price: parseInt(preciousData.price), // �?price 转换为整�?
+        price: parseInt(preciousData.price), // å°?price è½¬æ¢ä¸ºæ´æ?
         status: statusMapping[preciousData.status],
         discount:
           statusMapping[preciousData.status] === 2
@@ -296,7 +296,7 @@ function addEventListenerAfterDOMLoaded() {
         const id = parseInt(editBtn.getAttribute("data-id"), 10);
         const result = preciousListData.find((row) => row[0] === id);
 
-        console.log("编辑按钮点击，找到的行数据：", result, preciousListData);
+        console.log("ç¼è¾æé®ç¹å»ï¼æ¾å°çè¡æ°æ®ï¼", result, preciousListData);
 
         fillEditForm(result);
       }
@@ -333,10 +333,10 @@ function addEventListenerAfterDOMLoaded() {
       };
 
       const dataToSend = {
-        id: parseInt(editPreciousData.id), // 保留原有�?id，用于更新操�?
+        id: parseInt(editPreciousData.id), // ä¿çåæç?idï¼ç¨äºæ´æ°æä½?
         itemid: editPreciousData.itemid,
         title: editPreciousData.title,
-        price: parseInt(editPreciousData.price), // �?price 转换为整�?
+        price: parseInt(editPreciousData.price), // å°?price è½¬æ¢ä¸ºæ´æ?
         status: statusMapping[editPreciousData.status],
         discount:
           statusMapping[editPreciousData.status] === 2
@@ -359,7 +359,7 @@ function addEventListenerAfterDOMLoaded() {
 
     Swal.fire({
       title: "Are you sure?",
-      text: "The data will be deleted�?,
+      text: "The data will be deletedï¼?,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -380,20 +380,20 @@ function addEventListenerAfterDOMLoaded() {
           .then((res) => res.json())
           .then((data) => {
             if (data.success) {
-              location.reload(); // 重新加载页面以更新数�?
+              location.reload(); // éæ°å è½½é¡µé¢ä»¥æ´æ°æ°æ?
             } else {
               Swal.fire({
-                title: "�?删除失败",
-                text: data.message || "服务器返回错�?,
+                title: "â?å é¤å¤±è´¥",
+                text: data.message || "æå¡å¨è¿åéè¯?,
                 icon: "error",
               });
             }
           })
           .catch((err) => {
-            console.error("�?删除异常�?, err);
+            console.error("â?å é¤å¼å¸¸ï¼?, err);
             Swal.fire({
-              title: "网络错误",
-              text: "删除失败，请检查网络连�?,
+              title: "ç½ç»éè¯¯",
+              text: "å é¤å¤±è´¥ï¼è¯·æ£æ¥ç½ç»è¿æ?,
               icon: "error",
             });
           });
@@ -419,7 +419,7 @@ function formatPreciousListData(data) {
 }
 
 function AddPreciousList(e) {
-  // 发�?POST 请求到新�?Precious Item API
+  // åé?POST è¯·æ±å°æ°å¢?Precious Item API
   fetch("/api/preciouslist/create", {
     method: "POST",
     headers: {
@@ -430,14 +430,14 @@ function AddPreciousList(e) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        console.log("新增成功", result);
-        location.reload(); // 重新加载页面以更新数�?
+        console.log("æ°å¢æå", result);
+        location.reload(); // éæ°å è½½é¡µé¢ä»¥æ´æ°æ°æ?
       } else {
-        console.error("新增失败", result.message);
+        console.error("æ°å¢å¤±è´¥", result.message);
       }
     })
     .catch((error) => {
-      console.error("请求失败", error);
+      console.error("è¯·æ±å¤±è´¥", error);
     });
 }
 
@@ -452,13 +452,13 @@ function UpdatePreciousList(e) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        console.log("更新成功", result);
-        location.reload(); // 重新加载页面以更新数�?
+        console.log("æ´æ°æå", result);
+        location.reload(); // éæ°å è½½é¡µé¢ä»¥æ´æ°æ°æ?
       } else {
-        console.error("更新失败", result.message);
+        console.error("æ´æ°å¤±è´¥", result.message);
       }
     })
     .catch((error) => {
-      console.error("请求失败", error);
+      console.error("è¯·æ±å¤±è´¥", error);
     });
 }

@@ -1,28 +1,28 @@
 window.bannerList = [];
 window.countingDown = [];
 
-// 登录状态检查模�?
+// ç»å½ç¶ææ£æ¥æ¨¡å?
 window.addEventListener("DOMContentLoaded", function () {
   fetch("/api/banners", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // 如果需要携�?Cookie
+    credentials: "include", // å¦æéè¦æºå¸?Cookie
   })
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        console.log("Banner 数据�?, data.data);
-        bannerList = data.data; // 假设返回的数据格式是 { success: true, data: [...] }
+        console.log("Banner æ°æ®ï¼?, data.data);
+        bannerList = data.data; // åè®¾è¿åçæ°æ®æ ¼å¼æ¯ { success: true, data: [...] }
         renderBannerTable(bannerList);
         toggleAddBannerButton(bannerList);
       } else {
-        console.log("获取 Banner 失败:", data.message);
+        console.log("è·å Banner å¤±è´¥:", data.message);
       }
     })
     .catch((error) => {
-      console.error("请求失败:", error);
+      console.error("è¯·æ±å¤±è´¥:", error);
     });
 
   fetch("/api/countingdown", {
@@ -30,30 +30,30 @@ window.addEventListener("DOMContentLoaded", function () {
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // 如果需要携�?Cookie
+    credentials: "include", // å¦æéè¦æºå¸?Cookie
   })
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        console.log("CountingDown 数据�?, data.data);
-        countingDown = data.data[0]; // 假设返回的数据格式是 { success: true, data: {...} }
+        console.log("CountingDown æ°æ®ï¼?, data.data);
+        countingDown = data.data[0]; // åè®¾è¿åçæ°æ®æ ¼å¼æ¯ { success: true, data: {...} }
         renderCountingDownTable(countingDown);
       } else {
-        console.log("获取 CountingDown 失败:", data.message);
+        console.log("è·å CountingDown å¤±è´¥:", data.message);
       }
     })
     .catch((error) => {
-      console.error("请求失败:", error);
+      console.error("è¯·æ±å¤±è´¥:", error);
     });
 
-  // 使用事件委托监听 .banner-delete-trash 的点击事�?
+  // ä½¿ç¨äºä»¶å§æçå¬ .banner-delete-trash çç¹å»äºä»?
   document.addEventListener("click", function (e) {
-    // 判断是否点击的是 .banner-delete-trash 元素
+    // å¤æ­æ¯å¦ç¹å»çæ¯ .banner-delete-trash åç´ 
     if (e.target.closest(".banner-delete-trash")) {
       const target = e.target.closest(".banner-delete-trash");
-      const bannerId = target.getAttribute("data-banner-id"); // 获取 data-banner-id 的�?
+      const bannerId = target.getAttribute("data-banner-id"); // è·å data-banner-id çå?
 
-      // 设置 #delete-banner-id 元素的内容为 bannerId
+      // è®¾ç½® #delete-banner-id åç´ çåå®¹ä¸º bannerId
       const idContainer = document.getElementById("delete-banner-id");
       if (idContainer) {
         idContainer.innerHTML = bannerId;
@@ -67,7 +67,7 @@ window.addEventListener("DOMContentLoaded", function () {
       const id = parseInt(
         document.getElementById("delete-banner-id").innerHTML.trim()
       );
-      // 目标 URL，根据你的后端接口改成真实地址
+      // ç®æ  URLï¼æ ¹æ®ä½ çåç«¯æ¥å£æ¹æçå®å°å
       deleteBanner(id);
     });
 
@@ -84,21 +84,21 @@ window.addEventListener("DOMContentLoaded", function () {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            console.log("�?Banner 新增成功");
-            renderBannerTable(data.data); // 重新渲染 banner 表格
-            toggleAddBannerButton(data.data); // 更新添加按钮状�?
+            console.log("â?Banner æ°å¢æå");
+            renderBannerTable(data.data); // éæ°æ¸²æ banner è¡¨æ ¼
+            toggleAddBannerButton(data.data); // æ´æ°æ·»å æé®ç¶æ?
 
-            // 成功后可自动关闭 Modal
+            // æååå¯èªå¨å³é­ Modal
             const modal = bootstrap.Modal.getInstance(
               document.getElementById("AddBannerModal")
             );
             if (modal) modal.hide();
           } else {
-            console.error("�?新增失败: ", data.message);
+            console.error("â?æ°å¢å¤±è´¥: ", data.message);
           }
         })
         .catch((err) => {
-          console.error("�?请求错误: ", err);
+          console.error("â?è¯·æ±éè¯¯: ", err);
         });
     }
   });
@@ -148,19 +148,19 @@ function getCountingDownPreciousForm() {
       .value.trim(),
   };
 
-  console.log("提交的数据：", editCountingDownPreciousData);
+  console.log("æäº¤çæ°æ®ï¼", editCountingDownPreciousData);
   return editCountingDownPreciousData;
 }
 
 // function renderCountingDownData(data) {
-//   // 确保 result 有足够的字段
+//   // ç¡®ä¿ result æè¶³å¤çå­æ®µ
 //   if (!data || data.length < 8) return;
 
-//   // 填写对应字段
+//   // å¡«åå¯¹åºå­æ®µ
 //   document.getElementById("inner-countingdown-precious-image").src =
 //     data.pictureUrl;
 
-//   // 填充文本内容
+//   // å¡«åææ¬åå®¹
 //   document.getElementById("inner-countingdown-precious-title").innerText =
 //     data.title;
 //   document.getElementById("inner-countingdown-precious-price").innerText =
@@ -174,7 +174,7 @@ function getCountingDownPreciousForm() {
 //   document.getElementById("inner-countingdown-precious-ddl").innerText =
 //     data.ddl;
 
-//   // 设置链接
+//   // è®¾ç½®é¾æ¥
 //   const urlElement = document.getElementById("inner-countingdown-precious-url");
 //   urlElement.href = data.Url;
 //   urlElement.setAttribute("data-bs-title", data.Url);
@@ -182,7 +182,7 @@ function getCountingDownPreciousForm() {
 function renderCountingDownTable(data) {
   const tbody = document.getElementById("index-counting-down-tbody");
 
-  // 清空原始内容
+  // æ¸ç©ºåå§åå®¹
   tbody.innerHTML = "";
 
   const row = document.createElement("tr");
@@ -229,7 +229,7 @@ function renderCountingDownTable(data) {
 
   tbody.appendChild(row);
 
-  // 激�?tooltip
+  // æ¿æ´?tooltip
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
   );
@@ -253,15 +253,15 @@ function renderCountingDownTable(data) {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // 带上 Cookie
+        credentials: "include", // å¸¦ä¸ Cookie
         body: JSON.stringify(updatedData),
       })
         .then((response) => response.json())
         .then((res) => {
           if (res.success) {
-            console.log("�?更新成功");
+            console.log("â?æ´æ°æå");
 
-            // 重新获取最�?countingDown 数据
+            // éæ°è·åææ?countingDown æ°æ®
             fetch("/api/countingdown", {
               method: "GET",
               headers: {
@@ -275,28 +275,28 @@ function renderCountingDownTable(data) {
                   countingDown = data.data[0];
                   renderCountingDownTable(countingDown);
 
-                  // 成功后可自动关闭 Modal
+                  // æååå¯èªå¨å³é­ Modal
                   const modal = bootstrap.Modal.getInstance(
                     document.getElementById("EditCountingDownModal")
                   );
                   if (modal) modal.hide();
                 } else {
-                  console.error("�?更新后拉取最新数据失�?", data.message);
+                  console.error("â?æ´æ°åæåææ°æ°æ®å¤±è´?", data.message);
                 }
               });
           } else {
-            console.error("�?更新失败:", res.message);
+            console.error("â?æ´æ°å¤±è´¥:", res.message);
           }
         })
         .catch((err) => {
-          console.error("�?请求更新失败:", err);
+          console.error("â?è¯·æ±æ´æ°å¤±è´¥:", err);
         });
     }
   });
 }
 
 function fillCountingDownModal(data) {
-  // 填入 modal 表单中的字段
+  // å¡«å¥ modal è¡¨åä¸­çå­æ®µ
   document.getElementById("edit-countingdown-title").value = data.title || "";
   document.getElementById("edit-countingdown-price").value = data.price || "";
   document.getElementById("edit-countingdown-discount").value =
@@ -313,7 +313,7 @@ function fillCountingDownModal(data) {
 function renderBannerTable(data) {
   const tableBody = document.getElementById("index-banner-list-tbody");
 
-  // 清空旧内�?
+  // æ¸ç©ºæ§åå®?
   tableBody.innerHTML = "";
 
   data.forEach((item) => {
@@ -358,7 +358,7 @@ function renderBannerTable(data) {
     tableBody.appendChild(row);
   });
 
-  // 重新激�?Bootstrap Tooltip（必须的�?
+  // éæ°æ¿æ´?Bootstrap Tooltipï¼å¿é¡»çï¼?
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
   );
@@ -393,15 +393,15 @@ function deleteBanner(bannerId) {
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        console.log("Banner 删除成功");
-        // 删除成功后重新渲�?banner 列表
-        renderBannerTable(data.data); // 重新渲染
-        toggleAddBannerButton(data.data); // 更新添加按钮状�?
+        console.log("Banner å é¤æå");
+        // å é¤æååéæ°æ¸²æ?banner åè¡¨
+        renderBannerTable(data.data); // éæ°æ¸²æ
+        toggleAddBannerButton(data.data); // æ´æ°æ·»å æé®ç¶æ?
       } else {
-        console.log("Banner 删除失败:", data.message);
+        console.log("Banner å é¤å¤±è´¥:", data.message);
       }
     })
     .catch((error) => {
-      console.error("请求失败:", error);
+      console.error("è¯·æ±å¤±è´¥:", error);
     });
 }
