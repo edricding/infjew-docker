@@ -1,28 +1,24 @@
 window.bannerList = [];
 window.countingDown = [];
 
-// ç»å½ç¶ææ£æ¥æ¨¡å?
 window.addEventListener("DOMContentLoaded", function () {
   fetch("/api/banners", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // å¦æéè¦æºå¸?Cookie
+    credentials: "include",
   })
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        console.log("Banner æ°æ®ï¼?, data.data);
-        bannerList = data.data; // åè®¾è¿åçæ°æ®æ ¼å¼æ¯ { success: true, data: [...] }
+        bannerList = data.data;
         renderBannerTable(bannerList);
         toggleAddBannerButton(bannerList);
       } else {
-        console.log("è·å Banner å¤±è´¥:", data.message);
       }
     })
     .catch((error) => {
-      console.error("è¯·æ±å¤±è´¥:", error);
     });
 
   fetch("/api/countingdown", {
@@ -30,30 +26,24 @@ window.addEventListener("DOMContentLoaded", function () {
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // å¦æéè¦æºå¸?Cookie
+    credentials: "include",
   })
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        console.log("CountingDown æ°æ®ï¼?, data.data);
-        countingDown = data.data[0]; // åè®¾è¿åçæ°æ®æ ¼å¼æ¯ { success: true, data: {...} }
+        countingDown = data.data[0];
         renderCountingDownTable(countingDown);
       } else {
-        console.log("è·å CountingDown å¤±è´¥:", data.message);
       }
     })
     .catch((error) => {
-      console.error("è¯·æ±å¤±è´¥:", error);
     });
 
-  // ä½¿ç¨äºä»¶å§æçå¬ .banner-delete-trash çç¹å»äºä»?
   document.addEventListener("click", function (e) {
-    // å¤æ­æ¯å¦ç¹å»çæ¯ .banner-delete-trash åç´ 
     if (e.target.closest(".banner-delete-trash")) {
       const target = e.target.closest(".banner-delete-trash");
-      const bannerId = target.getAttribute("data-banner-id"); // è·å data-banner-id çå?
+      const bannerId = target.getAttribute("data-banner-id");
 
-      // è®¾ç½® #delete-banner-id åç´ çåå®¹ä¸º bannerId
       const idContainer = document.getElementById("delete-banner-id");
       if (idContainer) {
         idContainer.innerHTML = bannerId;
@@ -67,7 +57,6 @@ window.addEventListener("DOMContentLoaded", function () {
       const id = parseInt(
         document.getElementById("delete-banner-id").innerHTML.trim()
       );
-      // ç®æ  URLï¼æ ¹æ®ä½ çåç«¯æ¥å£æ¹æçå®å°å
       deleteBanner(id);
     });
 
@@ -84,21 +73,17 @@ window.addEventListener("DOMContentLoaded", function () {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            console.log("â?Banner æ°å¢æå");
-            renderBannerTable(data.data); // éæ°æ¸²æ banner è¡¨æ ¼
-            toggleAddBannerButton(data.data); // æ´æ°æ·»å æé®ç¶æ?
+            renderBannerTable(data.data);
+            toggleAddBannerButton(data.data);
 
-            // æååå¯èªå¨å³é­ Modal
             const modal = bootstrap.Modal.getInstance(
               document.getElementById("AddBannerModal")
             );
             if (modal) modal.hide();
           } else {
-            console.error("â?æ°å¢å¤±è´¥: ", data.message);
           }
         })
         .catch((err) => {
-          console.error("â?è¯·æ±éè¯¯: ", err);
         });
     }
   });
@@ -148,41 +133,15 @@ function getCountingDownPreciousForm() {
       .value.trim(),
   };
 
-  console.log("æäº¤çæ°æ®ï¼", editCountingDownPreciousData);
   return editCountingDownPreciousData;
 }
 
-// function renderCountingDownData(data) {
-//   // ç¡®ä¿ result æè¶³å¤çå­æ®µ
-//   if (!data || data.length < 8) return;
 
-//   // å¡«åå¯¹åºå­æ®µ
-//   document.getElementById("inner-countingdown-precious-image").src =
-//     data.pictureUrl;
 
-//   // å¡«åææ¬åå®¹
-//   document.getElementById("inner-countingdown-precious-title").innerText =
-//     data.title;
-//   document.getElementById("inner-countingdown-precious-price").innerText =
-//     data.price;
-//   document.getElementById("inner-countingdown-precious-discount").innerText =
-//     data.discount;
-//   document.getElementById("inner-countingdown-precious-percentage").innerText =
-//     data.percentage;
-//   document.getElementById("inner-countingdown-precious-rating").innerText =
-//     data.rating;
-//   document.getElementById("inner-countingdown-precious-ddl").innerText =
-//     data.ddl;
 
-//   // è®¾ç½®é¾æ¥
-//   const urlElement = document.getElementById("inner-countingdown-precious-url");
-//   urlElement.href = data.Url;
-//   urlElement.setAttribute("data-bs-title", data.Url);
-// }
 function renderCountingDownTable(data) {
   const tbody = document.getElementById("index-counting-down-tbody");
 
-  // æ¸ç©ºåå§åå®¹
   tbody.innerHTML = "";
 
   const row = document.createElement("tr");
@@ -229,7 +188,6 @@ function renderCountingDownTable(data) {
 
   tbody.appendChild(row);
 
-  // æ¿æ´?tooltip
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
   );
@@ -253,15 +211,13 @@ function renderCountingDownTable(data) {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // å¸¦ä¸ Cookie
+        credentials: "include",
         body: JSON.stringify(updatedData),
       })
         .then((response) => response.json())
         .then((res) => {
           if (res.success) {
-            console.log("â?æ´æ°æå");
 
-            // éæ°è·åææ?countingDown æ°æ®
             fetch("/api/countingdown", {
               method: "GET",
               headers: {
@@ -275,28 +231,23 @@ function renderCountingDownTable(data) {
                   countingDown = data.data[0];
                   renderCountingDownTable(countingDown);
 
-                  // æååå¯èªå¨å³é­ Modal
                   const modal = bootstrap.Modal.getInstance(
                     document.getElementById("EditCountingDownModal")
                   );
                   if (modal) modal.hide();
                 } else {
-                  console.error("â?æ´æ°åæåææ°æ°æ®å¤±è´?", data.message);
                 }
               });
           } else {
-            console.error("â?æ´æ°å¤±è´¥:", res.message);
           }
         })
         .catch((err) => {
-          console.error("â?è¯·æ±æ´æ°å¤±è´¥:", err);
         });
     }
   });
 }
 
 function fillCountingDownModal(data) {
-  // å¡«å¥ modal è¡¨åä¸­çå­æ®µ
   document.getElementById("edit-countingdown-title").value = data.title || "";
   document.getElementById("edit-countingdown-price").value = data.price || "";
   document.getElementById("edit-countingdown-discount").value =
@@ -313,7 +264,6 @@ function fillCountingDownModal(data) {
 function renderBannerTable(data) {
   const tableBody = document.getElementById("index-banner-list-tbody");
 
-  // æ¸ç©ºæ§åå®?
   tableBody.innerHTML = "";
 
   data.forEach((item) => {
@@ -358,7 +308,6 @@ function renderBannerTable(data) {
     tableBody.appendChild(row);
   });
 
-  // éæ°æ¿æ´?Bootstrap Tooltipï¼å¿é¡»çï¼?
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
   );
@@ -393,15 +342,11 @@ function deleteBanner(bannerId) {
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        console.log("Banner å é¤æå");
-        // å é¤æååéæ°æ¸²æ?banner åè¡¨
-        renderBannerTable(data.data); // éæ°æ¸²æ
-        toggleAddBannerButton(data.data); // æ´æ°æ·»å æé®ç¶æ?
+        renderBannerTable(data.data);
+        toggleAddBannerButton(data.data);
       } else {
-        console.log("Banner å é¤å¤±è´¥:", data.message);
       }
     })
     .catch((error) => {
-      console.error("è¯·æ±å¤±è´¥:", error);
     });
 }
