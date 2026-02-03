@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 )
 
-var Store = sessions.NewCookieStore([]byte("infinityjewelry")) // å¼ºçƒˆå»ºè®®æ”¹æˆæ›´å¤æ‚çš„å¯†é’¥
+var Store = sessions.NewCookieStore([]byte("infinityjewelry")) // ŠÁÒ½¨×h¸Ä³É¸üÑ}ësµÄÃÜè€
 
 func InitSession(w http.ResponseWriter, r *http.Request, username string) error {
 	session, _ := Store.Get(r, "session-id")
@@ -15,8 +15,8 @@ func InitSession(w http.ResponseWriter, r *http.Request, username string) error 
 		Path:     "/",
 		MaxAge:   3600,
 		HttpOnly: true,
-		Secure:   true, // âœ… å¿…é¡»åŠ 
-		SameSite: http.SameSiteNoneMode, // âœ… å¿…é¡»åŠ 
+		Secure:   true, // ±ØĞë¿ªÆô
+		SameSite: http.SameSiteNoneMode, // ±ØĞë¿ªÆô
 	}
 	return session.Save(r, w)
 }
@@ -53,4 +53,15 @@ func SessionStatusHandler(w http.ResponseWriter, r *http.Request) {
 			"loggedIn": false,
 		})
 	}
+}
+
+// RequireAuthHandler returns 204 if logged in, otherwise 401.
+// Intended for nginx auth_request.
+func RequireAuthHandler(w http.ResponseWriter, r *http.Request) {
+	_, ok := GetUsername(r)
+	if ok {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.WriteHeader(http.StatusUnauthorized)
 }

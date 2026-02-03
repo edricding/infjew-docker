@@ -27,7 +27,7 @@ func main() {
 	mux.Handle("/api/check", ApplyMiddlewares(http.HandlerFunc(handlers.CheckIDHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/hello", ApplyMiddlewares(http.HandlerFunc(handlers.HelloHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/session/status", ApplyMiddlewares(http.HandlerFunc(session.SessionStatusHandler), middleware.WithSessionRefresh, middleware.WithCORS))
-	mux.Handle("/api/banners", ApplyMiddlewares(http.HandlerFunc(handlers.GetBannersHandler), middleware.WithSessionRefresh, middleware.WithCORS))
+	mux.Handle("/api/session/require", ApplyMiddlewares(http.HandlerFunc(session.RequireAuthHandler), middleware.WithSessionRefresh, middleware.WithCORS))`r`n	mux.Handle("/api/banners", ApplyMiddlewares(http.HandlerFunc(handlers.GetBannersHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/banner/delete", ApplyMiddlewares(http.HandlerFunc(handlers.DeleteBannerHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/banner/create", ApplyMiddlewares(http.HandlerFunc(handlers.CreateBannerHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/countingdown", ApplyMiddlewares(http.HandlerFunc(handlers.GetCountingDownHandler), middleware.WithSessionRefresh, middleware.WithCORS))
@@ -59,7 +59,7 @@ func main() {
 	mux.Handle("/api/public/preciouslist", ApplyMiddlewares(http.HandlerFunc(handlers.PublicGetPreciousItemsHandler), middleware.WithCORS))
 
 
-	fmt.Println("服务器启动中，监听端口 8080...")
+	fmt.Println("服务器启动中，监听端�?8080...")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		fmt.Printf("服务器启动失败：%v\n", err)
 	}
