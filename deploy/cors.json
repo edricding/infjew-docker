@@ -1,0 +1,14 @@
+[
+  {
+    "origin": [
+      "http://108.61.194.156",
+      "https://www.infjew.com",
+      "https://infjew.com",
+      "http://www.infjew.com",
+      "http://infjew.com"
+    ],
+    "method": ["GET", "HEAD", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
+    "maxAgeSeconds": 3600
+  }
+]
