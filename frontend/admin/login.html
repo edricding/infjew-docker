@@ -14,12 +14,12 @@
     <script>
       window.addEventListener("DOMContentLoaded", function () {
         fetch("/api/session/status", {
-          credentials: "include", // ±ØÐë´øÉÏ cookie
+          credentials: "include", // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ cookie
         })
           .then((res) => res.json())
           .then((data) => {
             if (data.loggedIn) {
-              // ÒÑµÇÂ¼ÓÃ»§×Ô¶¯Ìø×ª
+              // ï¿½Ñµï¿½Â¼ï¿½Ã»ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½×ª
               window.location.href = "https://dashboard.infjew.com";
             }
           });
@@ -111,10 +111,10 @@
             </form>
 
             <p class="mt-auto mb-0">
-              <script>
+              2025 - <script>
                 document.write(new Date().getFullYear());
               </script>
-              ? INFJEW
+              @ INFJEW
             </p>
           </div>
         </div>
