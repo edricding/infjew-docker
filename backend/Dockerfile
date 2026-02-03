@@ -1,11 +1,17 @@
 FROM golang:1.22-alpine AS builder
 
+ARG GOPROXY=https://proxy.golang.org,direct
+ENV GOPROXY=$GOPROXY
+
 WORKDIR /app
+
+RUN apk add --no-cache ca-certificates
 
 # Cache deps when possible.
 COPY go.mod ./
 COPY backend ./backend
 
+RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend ./backend
 
 FROM alpine:3.20
