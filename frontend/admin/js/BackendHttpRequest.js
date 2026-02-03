@@ -24,7 +24,7 @@
       })
       .then(function (data) {
         if (data && data.success) {
-          window.location.href = "https://dashboard.infjew.com";
+          window.location.href = "https:
           return;
         }
         usernameEl.value = "";

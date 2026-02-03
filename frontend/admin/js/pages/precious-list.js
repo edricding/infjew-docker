@@ -7,16 +7,16 @@ window.addEventListener("DOMContentLoaded", function () {
 });
 
 function fillEditForm(result) {
-  // ç¡®ä¿ result æè¶³å¤çå­æ®µ
+
   if (!result || result.length < 10) return;
 
-  // å¡«åå¯¹åºå­æ®µ
+
   document.getElementById("edit-precious-id").value = result[0];
   document.getElementById("edit-precious-itemid").value = result[1];
   document.getElementById("edit-precious-title").value = result[2];
   document.getElementById("edit-precious-price").value = result[4];
 
-  // æ ¹æ® statusï¼?-3ï¼è®¾ç½®å¯¹åº?radio
+
   const statusRadioId = `edit-statusRadio${result[7]}`;
   const radio = document.getElementById(statusRadioId);
   if (radio) {
@@ -24,10 +24,10 @@ function fillEditForm(result) {
     radio.setAttribute("checked", "checked");
   }
 
-  // ææ£é»è¾
+
   const discountInput = document.getElementById("edit-precious-discount");
   if (result[7] === 2) {
-    // status === 2 è¡¨ç¤º Sale
+
     discountInput.disabled = false;
     discountInput.value = result[5] !== "-" ? result[5] : "";
   } else {
@@ -35,11 +35,11 @@ function fillEditForm(result) {
     discountInput.value = "";
   }
 
-  // è®¾ç½® Tagï¼å¦ææå¯¹åºé¡¹ï¼
-  const tagSelect = document.getElementById("edit-precious-tag");
-  tagSelect.value = result[3]; // åè®¾ result[2] æ?"Stelluna" æ?"Adornment"
 
-  // è®¾ç½® Ratingsï¼é»è®¤ä¸º 5ï¼?
+  const tagSelect = document.getElementById("edit-precious-tag");
+  tagSelect.value = result[3];
+
+
   const ratingSelect = document.getElementById("edit-rating-select");
   for (let i = 0; i < ratingSelect.options.length; i++) {
     if (parseInt(ratingSelect.options[i].value) === result[6]) {
@@ -54,7 +54,7 @@ function fillEditForm(result) {
 }
 
 function clearPreciousForm() {
-  // ææ¬è¾å¥æ¡æ¸ç©?
+
   document.getElementById("edit-precious-id").value = "";
   document.getElementById("edit-precious-itemid").value = "";
   document.getElementById("edit-precious-title").value = "";
@@ -63,16 +63,16 @@ function clearPreciousForm() {
   document.getElementById("edit-precious-url").value = "";
   document.getElementById("edit-precious-picture-url").value = "";
 
-  // ææ£æ ?disabled ç¶ææ¢å¤ï¼å¯éï¼
+
   document.getElementById("edit-precious-discount").disabled = true;
 
-  // åéæ¡ï¼statusRadioï¼å¨é¨åæ¶éä¸­
+
   document.querySelectorAll('input[name="statusRadio"]').forEach((radio) => {
     radio.checked = false;
     radio.removeAttribute("checked");
   });
 
-  // ä¸æèåéç½®ä¸ºç¬¬ä¸ä¸ªéé¡¹
+
   document.getElementById("edit-precious-tag").selectedIndex = 0;
   document.getElementById("edit-rating-select").selectedIndex = 0;
 }
@@ -85,22 +85,22 @@ function fetchAndRenderPreciousList() {
     .then((res) => res.json())
     .then((data) => {
       if (!data.success) {
-        console.error("â?è·åå¤±è´¥ï¼?, data.message);
+        console.error("芒聺?猫聨路氓聫聳氓陇卤猫麓楼茂录?, data.message);
         return;
       }
 
-      // â?æ ¼å¼åå¹¶ä¿å­
+
       const formatted = formatPreciousListData(data.data);
       preciousListData = formatted;
 
-      // â?ç¨æ ¼å¼ååçæ°æ®éæ°æ¸²æ
+
       reRenderPreciousList(formatted);
     });
 }
 
 function renderPreciousList(data) {
   const container = document.getElementById("table-gridjs");
-  container.innerHTML = ""; // æ¸ç©ºå®¹å¨åå®¹
+  container.innerHTML = "";
 
   const preciousGrid = new gridjs.Grid({
     columns: [
@@ -174,7 +174,7 @@ function renderPreciousList(data) {
     pagination: { limit: 10 },
     sort: true,
     search: true,
-    data: data, // â?å³é®ç¹ï¼ä½¿ç¨ä¼ å¥ç?dataï¼èä¸æ?window.preciousListData
+    data: data,
   });
 
   preciousGrid.on("ready", () => {
@@ -196,10 +196,10 @@ function reRenderPreciousList(data) {
   container.classList.add("fade-out");
 
   setTimeout(() => {
-    renderPreciousList(data); // åæ¥çæ¸²æé»è¾
+    renderPreciousList(data);
     container.classList.remove("fade-out");
     container.classList.add("fade-in");
-  }, 300); // å?CSS transition æ¶é´ä¸è?
+  }, 300);
 }
 
 function addEventListenerAfterDOMLoaded() {
@@ -266,7 +266,7 @@ function addEventListenerAfterDOMLoaded() {
       const dataToSend = {
         itemid: preciousData.id,
         title: preciousData.title,
-        price: parseInt(preciousData.price), // å°?price è½¬æ¢ä¸ºæ´æ?
+        price: parseInt(preciousData.price),
         status: statusMapping[preciousData.status],
         discount:
           statusMapping[preciousData.status] === 2
@@ -296,7 +296,7 @@ function addEventListenerAfterDOMLoaded() {
         const id = parseInt(editBtn.getAttribute("data-id"), 10);
         const result = preciousListData.find((row) => row[0] === id);
 
-        console.log("ç¼è¾æé®ç¹å»ï¼æ¾å°çè¡æ°æ®ï¼", result, preciousListData);
+        console.log("莽录聳猫戮聭忙聦聣茅聮庐莽聜鹿氓聡禄茂录聦忙聣戮氓聢掳莽職聞猫隆聦忙聲掳忙聧庐茂录職", result, preciousListData);
 
         fillEditForm(result);
       }
@@ -333,10 +333,10 @@ function addEventListenerAfterDOMLoaded() {
       };
 
       const dataToSend = {
-        id: parseInt(editPreciousData.id), // ä¿çåæç?idï¼ç¨äºæ´æ°æä½?
+        id: parseInt(editPreciousData.id),
         itemid: editPreciousData.itemid,
         title: editPreciousData.title,
-        price: parseInt(editPreciousData.price), // å°?price è½¬æ¢ä¸ºæ´æ?
+        price: parseInt(editPreciousData.price),
         status: statusMapping[editPreciousData.status],
         discount:
           statusMapping[editPreciousData.status] === 2
@@ -359,7 +359,7 @@ function addEventListenerAfterDOMLoaded() {
 
     Swal.fire({
       title: "Are you sure?",
-      text: "The data will be deletedï¼?,
+      text: "The data will be deleted茂录?,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -380,20 +380,20 @@ function addEventListenerAfterDOMLoaded() {
           .then((res) => res.json())
           .then((data) => {
             if (data.success) {
-              location.reload(); // éæ°å è½½é¡µé¢ä»¥æ´æ°æ°æ?
+              location.reload();
             } else {
               Swal.fire({
-                title: "â?å é¤å¤±è´¥",
-                text: data.message || "æå¡å¨è¿åéè¯?,
+                title: "芒聺?氓聢聽茅聶陇氓陇卤猫麓楼",
+                text: data.message || "忙聹聧氓聤隆氓聶篓猫驴聰氓聸聻茅聰聶猫炉?,
                 icon: "error",
               });
             }
           })
           .catch((err) => {
-            console.error("â?å é¤å¼å¸¸ï¼?, err);
+            console.error("芒聺?氓聢聽茅聶陇氓录聜氓赂赂茂录?, err);
             Swal.fire({
-              title: "ç½ç»éè¯¯",
-              text: "å é¤å¤±è´¥ï¼è¯·æ£æ¥ç½ç»è¿æ?,
+              title: "莽陆聭莽禄聹茅聰聶猫炉炉",
+              text: "氓聢聽茅聶陇氓陇卤猫麓楼茂录聦猫炉路忙拢聙忙聼楼莽陆聭莽禄聹猫驴聻忙聨?,
               icon: "error",
             });
           });
@@ -419,7 +419,7 @@ function formatPreciousListData(data) {
 }
 
 function AddPreciousList(e) {
-  // åé?POST è¯·æ±å°æ°å¢?Precious Item API
+
   fetch("/api/preciouslist/create", {
     method: "POST",
     headers: {
@@ -430,14 +430,14 @@ function AddPreciousList(e) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        console.log("æ°å¢æå", result);
-        location.reload(); // éæ°å è½½é¡µé¢ä»¥æ´æ°æ°æ?
+        console.log("忙聳掳氓垄聻忙聢聬氓聤聼", result);
+        location.reload();
       } else {
-        console.error("æ°å¢å¤±è´¥", result.message);
+        console.error("忙聳掳氓垄聻氓陇卤猫麓楼", result.message);
       }
     })
     .catch((error) => {
-      console.error("è¯·æ±å¤±è´¥", error);
+      console.error("猫炉路忙卤聜氓陇卤猫麓楼", error);
     });
 }
 
@@ -452,13 +452,13 @@ function UpdatePreciousList(e) {
     .then((response) => response.json())
     .then((result) => {
       if (result.success) {
-        console.log("æ´æ°æå", result);
-        location.reload(); // éæ°å è½½é¡µé¢ä»¥æ´æ°æ°æ?
+        console.log("忙聸麓忙聳掳忙聢聬氓聤聼", result);
+        location.reload();
       } else {
-        console.error("æ´æ°å¤±è´¥", result.message);
+        console.error("忙聸麓忙聳掳氓陇卤猫麓楼", result.message);
       }
     })
     .catch((error) => {
-      console.error("è¯·æ±å¤±è´¥", error);
+      console.error("猫炉路忙卤聜氓陇卤猫麓楼", error);
     });
 }

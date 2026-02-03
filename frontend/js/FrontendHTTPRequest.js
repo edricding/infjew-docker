@@ -5,16 +5,16 @@ window.addEventListener("DOMContentLoaded", function () {
   GetPreciousList();
 
   document.body.addEventListener("click", function (event) {
-    // æ£æ¥ç¹å»çåç´ æ¯å¦æ?.jump-to-new
+
     if (event.target.closest(".jump-to-new")) {
       const clickedElement = event.target.closest(".jump-to-new");
 
-      // å¤æ­æ¯å¦æ?"sold-out-active" ç±?
+
       if (!clickedElement.classList.contains("sold-out-active")) {
-        // è·å data-jump å±æ§çå?
+
         const jumpUrl = clickedElement.dataset.jump;
 
-        // å¦æ url å­å¨ï¼åæå¼æ°é¡µé?
+
         if (jumpUrl) {
           window.open(jumpUrl, "_blank");
         }
@@ -28,21 +28,21 @@ function GetBanner() {
     .then((res) => res.json())
     .then((data) => {
       if (!data.success || !Array.isArray(data.data)) {
-        console.error("è·å banner å¤±è´¥:", data.message);
+        console.error("猫聨路氓聫聳 banner 氓陇卤猫麓楼:", data.message);
         return;
       }
       console.log("data", data);
       const carousel = $(".hero-area-slider");
       console.log("$carousel", carousel);
 
-      // â?1. éæ¯æ§ç?owlCarouselï¼å¦æå·²ç»åå§åï¼?
+
       if (carousel.hasClass("owl-loaded")) {
         carousel.trigger("destroy.owl.carousel");
-        carousel.html(""); // æ¸ç©º DOM
-        carousel.removeClass("owl-loaded owl-hidden"); // å¹²åç§»é¤ class
+        carousel.html("");
+        carousel.removeClass("owl-loaded owl-hidden");
       }
 
-      // â?2. å¨ææ·»å æ¯ä¸ä¸?slide
+
       data.data.forEach((banner) => {
         const slideHtml = `
         <div class="single-slide-item">
@@ -70,7 +70,7 @@ function GetBanner() {
         carousel.append(slideHtml);
       });
 
-      // â?3. éæ°åå§å?Owl Carousel
+
       carousel.owlCarousel({
         items: 1,
         loop: true,
@@ -82,7 +82,7 @@ function GetBanner() {
       });
     })
     .catch((err) => {
-      console.error("è¯·æ± banner åºé:", err);
+      console.error("猫炉路忙卤聜 banner 氓聡潞茅聰聶:", err);
     });
 }
 
@@ -91,22 +91,22 @@ function GetCountingDown() {
     .then((res) => res.json())
     .then((data) => {
       if (!data.success || !data.data || data.data.length === 0) {
-        console.error("æ åè®¡æ¶æ°æ®å¯å±ç¤º");
+        console.error("忙聴聽氓聙聮猫庐隆忙聴露忙聲掳忙聧庐氓聫炉氓卤聲莽陇潞");
         return;
       }
 
-      const item = data.data[0]; // åç¬¬ä¸ä¸ªåå?
+      const item = data.data[0];
 
       const container = document.getElementById("countingdownContainer");
       if (!container) return;
 
-      // æ´æ°æ é¢åææ£ä¿¡æ?
+
       container.querySelector(
         "h4"
       ).innerHTML = `Precious Sale <span>${item.percentage} Off</span>`;
       container.querySelector("h2").textContent = item.title;
 
-      // æ´æ°è¯å
+
       const ratingEl = container.querySelector(".item-rating");
       ratingEl.innerHTML = "";
       for (let i = 0; i < 5; i++) {
@@ -115,33 +115,33 @@ function GetCountingDown() {
         ratingEl.appendChild(star);
       }
 
-      // æ´æ°ä»·æ ¼
+
       const priceEl = container.querySelector(".item-price p");
       priceEl.innerHTML = `$${item.discount} <span>$${item.price}</span>`;
 
-      // æ´æ°æé®é¾æ¥
+
       const goBtn = document.getElementById("go-for-it-btn");
       if (goBtn) {
         goBtn.href = item.url;
       }
 
-      // æ´æ°å¾ç
+
       const imgEl = document.querySelector(".countdown-img img");
       if (imgEl) {
         imgEl.src = item.picurl;
       }
 
-      // åå§ååè®¡æ?
+
       const ddl = new Date(item.ddl);
-      //   simplyCountdown(".simply-countdown-one", {
-      //     year: ddl.getFullYear(),
-      //     month: ddl.getMonth() + 1,
-      //     day: ddl.getDate(),
-      //     hours: ddl.getHours(),
-      //     minutes: ddl.getMinutes(),
-      //     seconds: ddl.getSeconds(),
-      //     enableUtc: false,
-      //   });
+
+
+
+
+
+
+
+
+
 
       simplyCountdown(".simply-countdown-one", {
         year: ddl.getFullYear(),
@@ -150,7 +150,7 @@ function GetCountingDown() {
       });
     })
     .catch((err) => {
-      console.error("è·ååè®¡æ¶æ°æ®å¤±è´?", err);
+      console.error("猫聨路氓聫聳氓聙聮猫庐隆忙聴露忙聲掳忙聧庐氓陇卤猫麓?", err);
     });
 }
 
@@ -161,11 +161,11 @@ function GetPreciousList() {
       if (data.success) {
         renderProducts(data.data);
       } else {
-        console.error("æ°æ®è·åå¤±è´¥");
+        console.error("忙聲掳忙聧庐猫聨路氓聫聳氓陇卤猫麓楼");
       }
     })
     .catch((error) => {
-      console.error("è¯·æ±å¤±è´¥:", error);
+      console.error("猫炉路忙卤聜氓陇卤猫麓楼:", error);
     });
 }
 
@@ -174,15 +174,15 @@ function renderProducts(products) {
   const tabContainer = document.querySelector("#newArrivalTabContainer");
   const tabContent = document.querySelector("#nav-tabContent");
 
-  // æ¸ç©ºç°æåå®¹
+
   allProductsContainer.innerHTML = "";
   tabContainer.innerHTML = "";
   tabContent.innerHTML = "";
 
-  // å¨æåç±»ï¼æ ¹æ® tag åç±»äº§å
+
   const categorizedProducts = categorizeProductsByTag(products);
 
-  // åå»º All åç±»
+
   const allTabButton = document.createElement("button");
   allTabButton.classList.add("nav-link", "active");
   allTabButton.id = "all-products-tab";
@@ -209,7 +209,7 @@ function renderProducts(products) {
   allTabPane.appendChild(allRow);
   tabContent.appendChild(allTabPane);
 
-  // åå»ºå¶ä»åç±» Tabs
+
   for (const [tag, productsInCategory] of Object.entries(categorizedProducts)) {
     const tabButton = document.createElement("button");
     tabButton.classList.add("nav-link");
@@ -239,7 +239,7 @@ function renderProducts(products) {
   }
 }
 
-// æ ¹æ® tag åç±»äº§å
+
 function categorizeProductsByTag(products) {
   const categorized = {};
 
@@ -261,7 +261,7 @@ function createProductCard(product) {
   card.classList.add("top-product-wrapper", "jump-to-new");
   card.dataset.jump = product.url;
 
-  // å¤æ­æ¯å¦ä¸?"Sold out" ç¶æ?
+
   const isSoldOut = product.status === 0;
   if (isSoldOut) {
     card.classList.add("sold-out-active");
@@ -275,7 +275,7 @@ function createProductCard(product) {
     "align-items-center"
   );
 
-  // å¦ææ¯å®ç½ï¼æ·»å å®ç½æ ç­¾
+
   if (isSoldOut) {
     const soldOut = document.createElement("div");
     soldOut.classList.add("sold-out-inner");
@@ -290,7 +290,7 @@ function createProductCard(product) {
   image.alt = product.title;
   imageWrapper.appendChild(image);
 
-  // å¦æ status ä¸?2ï¼æ·»å ææ£æ ç­?
+
   if (product.status === 2 && product.discount < product.price) {
     const discountPercentage = Math.floor(
       ((product.price - product.discount) / product.price) * 100

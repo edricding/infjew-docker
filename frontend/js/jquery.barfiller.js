@@ -4,9 +4,9 @@
 * Description: A plugin that fills bars with a percentage you set.
 * Author: 9bit Studios
 * Copyright 2012, 9bit Studios
-* http://www.9bitstudios.com
+* http:
 * Free to use and abuse under the MIT license.
-* http://www.opensource.org/licenses/mit-license.php
+* http:
 */
 
 (function ($) {
@@ -168,9 +168,9 @@
 			
         };
         
-        if (methods[options]) { 	// $("#element").pluginName('methodName', 'arg1', 'arg2');
+        if (methods[options]) {
             return methods[options].apply(this, Array.prototype.slice.call(arguments, 1));
-        } else if (typeof options === 'object' || !options) { 	// $("#element").pluginName({ option: 1, option:2 });
+        } else if (typeof options === 'object' || !options) {
             return methods.init.apply(this);  
         } else {
             $.error( 'Method "' +  method + '" does not exist in barfiller plugin!');

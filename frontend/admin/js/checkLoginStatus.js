@@ -9,7 +9,7 @@ window.addEventListener("DOMContentLoaded", function () {
         window.location.href = "/login";
         return;
       }
-      // Show page only after auth passes.
+
       document.documentElement.style.visibility = "visible";
     })
     .catch((err) => {
