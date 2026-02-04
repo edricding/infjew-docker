@@ -57,13 +57,13 @@ function renderUsersTable(users) {
         <td>${user.id}</td>
         <td>${escapeHtml(user.username || "")}</td>
         <td>
-          <button type="button"
-            class="btn btn-warning btn-icon btn-sm reset-password-btn"
-            data-bs-toggle="modal"
+
+        <a href="javascript:void(0);" 
+                 class="btn btn-soft-warning btn-icon btn-sm rounded-circle reset-password-btn" data-bs-toggle="modal"
             data-bs-target="#ResetPasswordModal"
-            data-id="${user.id}">
-            <i class="ti ti-password"></i>
-          </button>
+                 data-id="${user.id}">
+                <i class="ti ti-key"></i>
+              </a>
         </td>
       `;
       tbody.appendChild(row);
