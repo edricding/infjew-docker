@@ -155,38 +155,41 @@
             return;
           }
 
-          grecaptcha.execute("6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr", { action: "login" })
-            .then(function (token) {
-              return fetch("/api/AuthLogin", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                  username: username,
-                  password: password,
-                  recaptchaToken: token,
-                }),
+          grecaptcha.ready(function () {
+            grecaptcha
+              .execute("6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr", { action: "login" })
+              .then(function (token) {
+                return fetch("/api/AuthLogin", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  credentials: "include",
+                  body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    recaptchaToken: token,
+                  }),
+                });
+              })
+              .then(function (res) {
+                return res.json();
+              })
+              .then(function (data) {
+                if (data && data.success) {
+                  window.location.href = "https://dashboard.infjew.com";
+                  return;
+                }
+                showMsg(generalMsgEl, (data && data.message) || "Login failed");
+              })
+              .catch(function (err) {
+                console.error("Login failed", err);
+                showMsg(generalMsgEl, "Login failed");
+              })
+              .then(function () {
+                btn.disabled = false;
               });
-            })
-            .then(function (res) {
-              return res.json();
-            })
-            .then(function (data) {
-              if (data && data.success) {
-                window.location.href = "https://dashboard.infjew.com";
-                return;
-              }
-              showMsg(generalMsgEl, (data && data.message) || "Login failed");
-            })
-            .catch(function (err) {
-              console.error("Login failed", err);
-              showMsg(generalMsgEl, "Login failed");
-            })
-            .finally(function () {
-              btn.disabled = false;
-            });
+          });
         }
 
       btn.addEventListener("click", submitLogin);
