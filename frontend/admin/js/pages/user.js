@@ -38,6 +38,7 @@ function renderUsersTable(users) {
     <tr>
       <th style="width: 80px;">ID</th>
       <th>Username</th>
+      <th style="width: 140px;">Role</th>
       <th style="width: 140px;">Action</th>
     </tr>
   `;
@@ -47,15 +48,17 @@ function renderUsersTable(users) {
   if (users.length === 0) {
     const emptyRow = document.createElement("tr");
     emptyRow.innerHTML = `
-      <td colspan="3" class="text-muted">No users found.</td>
+      <td colspan="4" class="text-muted">No users found.</td>
     `;
     tbody.appendChild(emptyRow);
   } else {
     users.forEach((user) => {
+      const isSuperAdmin = (user.role || "").toLowerCase() === "superadmin";
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${user.id}</td>
         <td>${escapeHtml(user.username || "")}</td>
+        <td>${escapeHtml(user.role || "")}</td>
         <td>
 
         <a href="javascript:void(0);" 
@@ -64,6 +67,16 @@ function renderUsersTable(users) {
                  data-id="${user.id}">
                 <i class="ti ti-key"></i>
               </a>
+
+              ${
+                isSuperAdmin
+                  ? ""
+                  : `<a href="javascript:void(0);" 
+                 class="btn btn-soft-danger btn-icon btn-sm rounded-circle delete-user-btn" 
+                 data-id="${user.id}">
+                <i class="ti ti-trash"></i>
+              </a>`
+              }
         </td>
       `;
       tbody.appendChild(row);
@@ -106,6 +119,58 @@ function bindResetPasswordActions() {
       }
       activeResetUserId = parseInt(btn.getAttribute("data-id"), 10);
       clearResetPasswordForm();
+    });
+
+    tableContainer.addEventListener("click", function (e) {
+      const deleteBtn = e.target.closest(".delete-user-btn");
+      if (!deleteBtn) {
+        return;
+      }
+      const id = parseInt(deleteBtn.getAttribute("data-id"), 10);
+      if (!id) {
+        return;
+      }
+
+      Swal.fire({
+        title: "Are you sure?",
+        text: "The user will be deleted",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Delete",
+        cancelButtonText: "Cancel",
+        customClass: {
+          confirmButton: "swal2-confirm btn btn-danger",
+          cancelButton: "btn btn-warning ms-2",
+        },
+        buttonsStyling: false,
+      }).then((result) => {
+        if (!result.isConfirmed) {
+          return;
+        }
+        fetch("/api/users/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ id: id }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data && data.success) {
+              Swal.fire({
+                title: "Deleted",
+                text: "User deleted successfully",
+                icon: "success",
+              });
+              fetchUsers();
+              return;
+            }
+            renderError((data && data.message) || "Delete failed.");
+          })
+          .catch((err) => {
+            console.error("Delete failed", err);
+            renderError("Delete failed.");
+          });
+      });
     });
   }
 
@@ -183,4 +248,3 @@ function showResetPasswordMsg(msg) {
   msgEl.textContent = msg;
   msgEl.style.display = "block";
 }
-

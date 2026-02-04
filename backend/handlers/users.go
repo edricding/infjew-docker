@@ -12,6 +12,7 @@ import (
 type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
+	Role     string `json:"role"`
 }
 
 // GetUsersHandler returns a list of users (account table) without passwords.
@@ -25,7 +26,7 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := db.DB.Query("SELECT id, username FROM account")
+	rows, err := db.DB.Query("SELECT id, username, role FROM account")
 	if err != nil {
 		log.Printf("Database query failed: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -40,7 +41,7 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	var users []User
 	for rows.Next() {
 		var user User
-		if err := rows.Scan(&user.ID, &user.Username); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username, &user.Role); err != nil {
 			log.Printf("Row scan failed: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]interface{}{
@@ -119,5 +120,76 @@ func ResetUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
 		"message": "Password updated",
+	})
+}
+
+type DeleteUserRequest struct {
+	ID int `json:"id"`
+}
+
+func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "Method Not Allowed",
+		})
+		return
+	}
+
+	var req DeleteUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Invalid JSON: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "Invalid JSON",
+		})
+		return
+	}
+
+	if req.ID <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "Invalid payload",
+		})
+		return
+	}
+
+	var role string
+	if err := db.DB.QueryRow("SELECT role FROM account WHERE id = ?", req.ID).Scan(&role); err != nil {
+		log.Printf("Role lookup failed: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "Role lookup failed",
+		})
+		return
+	}
+
+	if role == "superadmin" {
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "Superadmin cannot be deleted",
+		})
+		return
+	}
+
+	_, err := db.DB.Exec("DELETE FROM account WHERE id = ?", req.ID)
+	if err != nil {
+		log.Printf("Delete user failed: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "Delete failed",
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "User deleted",
 	})
 }
