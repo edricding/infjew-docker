@@ -12,6 +12,7 @@
 
 .contact-form-inner {
   position: relative;
+  height: 100%;
 }
 
 .contact-form-overlay {
