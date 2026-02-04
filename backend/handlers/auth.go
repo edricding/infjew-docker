@@ -3,19 +3,20 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"net/http"
-	
 	"log"
+	"net/http"
+	"net/url"
+	"os"
 
 	"INFJEW/backend/db"
-	"golang.org/x/crypto/bcrypt"
-
 	"INFJEW/backend/session"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	RecaptchaToken string `json:"recaptchaToken"`
 }
 
 type LoginResponse struct {
@@ -39,6 +40,28 @@ func AuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(LoginResponse{
 			Success: false,
 			Message: "Invalid JSON",
+		})
+		return
+	}
+
+	if req.RecaptchaToken == "" {
+		json.NewEncoder(w).Encode(LoginResponse{
+			Success: false,
+			Message: "reCAPTCHA required",
+		})
+		return
+	}
+
+	recaptchaResult, err := verifyRecaptcha(req.RecaptchaToken, "login")
+	if err != nil || !recaptchaResult.OK {
+		log.Printf("reCAPTCHA failed: %v", err)
+		msg := recaptchaResult.Message
+		if msg == "" {
+			msg = "reCAPTCHA failed"
+		}
+		json.NewEncoder(w).Encode(LoginResponse{
+			Success: false,
+			Message: msg,
 		})
 		return
 	}
@@ -90,6 +113,52 @@ func AuthLoginHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 
 	
+}
+
+type recaptchaResponse struct {
+	Success bool    `json:"success"`
+	Score   float64 `json:"score"`
+	Action  string  `json:"action"`
+}
+
+type recaptchaResult struct {
+	OK      bool
+	Message string
+}
+
+func verifyRecaptcha(token string, expectedAction string) (recaptchaResult, error) {
+	secret := os.Getenv("RECAPTCHA_SECRET")
+	if secret == "" {
+		return recaptchaResult{OK: false, Message: "reCAPTCHA not configured"}, http.ErrNoCookie
+	}
+
+	resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify", url.Values{
+		"secret":   {secret},
+		"response": {token},
+	})
+	if err != nil {
+		return recaptchaResult{OK: false, Message: "reCAPTCHA verification error"}, err
+	}
+	defer resp.Body.Close()
+
+	var result recaptchaResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return recaptchaResult{OK: false, Message: "reCAPTCHA verification error"}, err
+	}
+
+	if !result.Success {
+		return recaptchaResult{OK: false, Message: "reCAPTCHA failed"}, nil
+	}
+	if expectedAction != "" && result.Action != expectedAction {
+		return recaptchaResult{OK: false, Message: "reCAPTCHA action mismatch"}, nil
+	}
+
+	const minScore = 0.5
+	if result.Score < minScore {
+		return recaptchaResult{OK: false, Message: "reCAPTCHA score too low"}, nil
+	}
+
+	return recaptchaResult{OK: true}, nil
 }
 
 func AuthLogoutHandler(w http.ResponseWriter, r *http.Request) {

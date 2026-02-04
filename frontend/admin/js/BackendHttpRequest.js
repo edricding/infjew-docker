@@ -36,7 +36,7 @@
       .catch(function () {});
   }
 
-  if (loginSubmitBtn) {
+  if (loginSubmitBtn && !window.__RECAPTCHA_ENABLED__) {
     loginSubmitBtn.addEventListener("click", handleLogin);
 
     var usernameInput = document.getElementById("login-username");

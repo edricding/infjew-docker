@@ -88,13 +88,17 @@
     </div>
   </div>
 
-  <!-- Vendor js -->
-  <script src="/js/vendor.min.js"></script>
+    <!-- Vendor js -->
+    <script src="/js/vendor.min.js"></script>
 
-  <!-- App js -->
-  <script src="/js/app.js"></script>
+    <!-- App js -->
+    <script src="/js/app.js"></script>
 
-  <script src="/js/BackendHttpRequest.js"></script>
+    <script>
+      window.__RECAPTCHA_ENABLED__ = true;
+    </script>
+    <script src="https://www.google.com/recaptcha/api.js?render=6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr"></script>
+    <script src="/js/BackendHttpRequest.js"></script>
 
   <script>
     (function () {
@@ -124,11 +128,11 @@
         showMsg(generalMsgEl, "");
       }
 
-      function submitLogin() {
-        clearMsgs();
+        function submitLogin() {
+          clearMsgs();
 
-        var username = (usernameEl.value || "").trim();
-        var password = passwordEl.value || "";
+          var username = (usernameEl.value || "").trim();
+          var password = passwordEl.value || "";
 
         var hasError = false;
         if (!username) {
@@ -143,37 +147,47 @@
           return;
         }
 
-        btn.disabled = true;
+          btn.disabled = true;
 
-        fetch("/api/AuthLogin", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            username: username,
-            password: password,
-          }),
-        })
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (data) {
-            if (data && data.success) {
-              window.location.href = "https://dashboard.infjew.com";
-              return;
-            }
-            showMsg(generalMsgEl, (data && data.message) || "Login failed");
-          })
-          .catch(function (err) {
-            console.error("Login failed", err);
-            showMsg(generalMsgEl, "Login failed");
-          })
-          .finally(function () {
+          if (!window.grecaptcha) {
+            showMsg(generalMsgEl, "reCAPTCHA not ready.");
             btn.disabled = false;
-          });
-      }
+            return;
+          }
+
+          grecaptcha.execute("6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr", { action: "login" })
+            .then(function (token) {
+              return fetch("/api/AuthLogin", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                  username: username,
+                  password: password,
+                  recaptchaToken: token,
+                }),
+              });
+            })
+            .then(function (res) {
+              return res.json();
+            })
+            .then(function (data) {
+              if (data && data.success) {
+                window.location.href = "https://dashboard.infjew.com";
+                return;
+              }
+              showMsg(generalMsgEl, (data && data.message) || "Login failed");
+            })
+            .catch(function (err) {
+              console.error("Login failed", err);
+              showMsg(generalMsgEl, "Login failed");
+            })
+            .finally(function () {
+              btn.disabled = false;
+            });
+        }
 
       btn.addEventListener("click", submitLogin);
       passwordEl.addEventListener("keydown", function (e) {
