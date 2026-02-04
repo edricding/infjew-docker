@@ -1,234 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Login | INFJEW - Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- App favicon -->
-    <link
-      rel="shortcut icon"
-      href="https://storage.googleapis.com/bucket-infjew/INFJEW/backend/images/favicon.jpg"
-    />
+<head>
+  <meta charset="utf-8" />
+  <title>Login | INFJEW - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <script>
-      window.addEventListener("DOMContentLoaded", function () {
-        fetch("/api/session/status", {
-          credentials: "include",
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.loggedIn) {
-              window.location.href = "https://dashboard.infjew.com";
-            }
-          });
-      });
-    </script>
+  <!-- App favicon -->
+  <link rel="shortcut icon" href="https://storage.googleapis.com/bucket-infjew/INFJEW/backend/images/favicon.jpg" />
 
-    <!-- Theme Config Js -->
-    <script src="/js/config.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      fetch("/api/session/status", {
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.loggedIn) {
+            window.location.href = "https://dashboard.infjew.com";
+          }
+        });
+    });
+  </script>
 
-    <!-- Vendor css -->
-    <link
-      href="/css/vendor.min.css"
-      rel="stylesheet"
-      type="text/css"
-    />
+  <!-- Theme Config Js -->
+  <script src="/js/config.js"></script>
 
-    <!-- App css -->
-    <link
-      href="/css/app.css"
-      rel="stylesheet"
-      type="text/css"
-      id="app-style"
-    />
+  <!-- Vendor css -->
+  <link href="/css/vendor.min.css" rel="stylesheet" type="text/css" />
 
-    <!-- Icons css -->
-    <link
-      href="/css/icons.min.css"
-      rel="stylesheet"
-      type="text/css"
-    />
-  </head>
+  <!-- App css -->
+  <link href="/css/app.css" rel="stylesheet" type="text/css" id="app-style" />
 
-  <body>
-    <div
-      class="auth-bg d-flex min-vh-100 justify-content-center align-items-center"
-    >
-      <div class="row g-0 justify-content-center w-100 m-xxl-5 px-xxl-4 m-3">
-        <div class="col-xl-4 col-lg-5 col-md-6">
-          <div class="card overflow-hidden text-center h-100 p-xxl-4 p-3 mb-0">
-            <a href="#" class="auth-brand mb-3">
-              <img
-                src="https://storage.googleapis.com/bucket-infjew/INFJEW/backend/images/logo-website.png"
-                alt="dark logo"
-                class="logo-dark col-lg-6 col-md-6 col-sm-12 col-xs-12 my-3"
-              />
-            </a>
+  <!-- Icons css -->
+  <link href="/css/icons.min.css" rel="stylesheet" type="text/css" />
+</head>
 
-            <h4 class="fw-semibold mb-2">Login your account</h4>
+<body>
+  <div class="auth-bg d-flex min-vh-100 justify-content-center align-items-center">
+    <div class="row g-0 justify-content-center w-100 m-xxl-5 px-xxl-4 m-3">
+      <div class="col-xl-4 col-lg-5 col-md-6">
+        <div class="card overflow-hidden text-center h-100 p-xxl-4 p-3 mb-0">
+          <a href="#" class="auth-brand mb-3">
+            <img src="https://storage.googleapis.com/bucket-infjew/INFJEW/backend/images/logo-website.png"
+              alt="dark logo" class="logo-dark col-lg-6 col-md-6 col-sm-12 col-xs-12 my-3" />
+          </a>
 
-            <p class="text-muted mb-4">
-              Enter your username and password to access admin dashboard.
-            </p>
+          <h4 class="fw-semibold mb-2">Login your account</h4>
 
-            <form class="text-start mb-3 needs-validation" novalidate>
-              <div class="mb-3">
-                <label class="form-label" for="login-username">Username</label>
-                <input
-                  type="text"
-                  id="login-username"
-                  name="login-username"
-                  class="form-control"
-                  placeholder="Enter your username"
-                  required
-                />
-                <div
-                  id="login-username-msg"
-                  class="mt-1"
-                  style="color: #f36b21; font-size: 12px; display: none"
-                ></div>
-              </div>
+          <p class="text-muted mb-4">
+            Enter your username and password to access admin dashboard.
+          </p>
 
-              <div class="mb-3">
-                <label class="form-label" for="login-password">Password</label>
-                <input
-                  type="password"
-                  id="login-password"
-                  class="form-control"
-                  placeholder="Enter your password"
-                  required
-                />
-                <div
-                  id="login-password-msg"
-                  class="mt-1"
-                  style="color: #f36b21; font-size: 12px; display: none"
-                ></div>
-              </div>
+          <form class="text-start mb-3 needs-validation" novalidate>
+            <div class="mb-3">
+              <label class="form-label" for="login-username">Username</label>
+              <input type="text" id="login-username" name="login-username" class="form-control"
+                placeholder="Enter your username" required />
+              <div id="login-username-msg" class="mt-1" style="color: #f36b21; font-size: 12px; display: none"></div>
+            </div>
 
-              <div class="d-grid">
-                <button
-                  class="btn btn-primary"
-                  id="login-submit-btn"
-                  type="button"
-                >
-                  Login
-                </button>
-              </div>
-            </form>
+            <div class="mb-3">
+              <label class="form-label" for="login-password">Password</label>
+              <input type="password" id="login-password" class="form-control" placeholder="Enter your password"
+                required />
+              <div id="login-password-msg" class="mt-1" style="color: #f36b21; font-size: 12px; display: none"></div>
+            </div>
 
-            <div
-              id="login-general-msg"
-              class="mb-2"
-              style="color: #f36b21; font-size: 12px; display: none"
-            ></div>
+            <div class="d-grid">
+              <button class="btn btn-primary" id="login-submit-btn" type="button">
+                Login
+              </button>
+            </div>
+          </form>
 
-            <p class="mt-auto mb-0">
-              2025 -
-              <script>
-                document.write(new Date().getFullYear());
-              </script>
-              @ INFJEW
-            </p>
-          </div>
+          <div id="login-general-msg" class="mb-2" style="color: #f36b21; font-size: 12px; display: none"></div>
+
+          <p class="mt-auto mb-0">
+            2025 -
+            <script>
+              document.write(new Date().getFullYear());
+            </script>
+            @ INFJEW
+          </p>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Vendor js -->
-    <script src="/js/vendor.min.js"></script>
+  <!-- Vendor js -->
+  <script src="/js/vendor.min.js"></script>
 
-    <!-- App js -->
-    <script src="/js/app.js"></script>
+  <!-- App js -->
+  <script src="/js/app.js"></script>
 
-    <script src="/js/BackendHttpRequest.js"></script>
+  <script src="/js/BackendHttpRequest.js"></script>
 
-    <script>
-      (function () {
-        var btn = document.getElementById("login-submit-btn");
-        var usernameEl = document.getElementById("login-username");
-        var passwordEl = document.getElementById("login-password");
-        var userMsgEl = document.getElementById("login-username-msg");
-        var passMsgEl = document.getElementById("login-password-msg");
-        var generalMsgEl = document.getElementById("login-general-msg");
+  <script>
+    (function () {
+      var btn = document.getElementById("login-submit-btn");
+      var usernameEl = document.getElementById("login-username");
+      var passwordEl = document.getElementById("login-password");
+      var userMsgEl = document.getElementById("login-username-msg");
+      var passMsgEl = document.getElementById("login-password-msg");
+      var generalMsgEl = document.getElementById("login-general-msg");
 
-        function showMsg(el, msg) {
-          if (!el) {
-            return;
-          }
-          if (!msg) {
-            el.style.display = "none";
-            el.textContent = "";
-            return;
-          }
-          el.textContent = msg;
-          el.style.display = "block";
+      function showMsg(el, msg) {
+        if (!el) {
+          return;
+        }
+        if (!msg) {
+          el.style.display = "none";
+          el.textContent = "";
+          return;
+        }
+        el.textContent = msg;
+        el.style.display = "block";
+      }
+
+      function clearMsgs() {
+        showMsg(userMsgEl, "");
+        showMsg(passMsgEl, "");
+        showMsg(generalMsgEl, "");
+      }
+
+      function submitLogin() {
+        clearMsgs();
+
+        var username = (usernameEl.value || "").trim();
+        var password = passwordEl.value || "";
+
+        var hasError = false;
+        if (!username) {
+          showMsg(userMsgEl, "Please enter your username.");
+          hasError = true;
+        }
+        if (!password) {
+          showMsg(passMsgEl, "Please enter your password.");
+          hasError = true;
+        }
+        if (hasError) {
+          return;
         }
 
-        function clearMsgs() {
-          showMsg(userMsgEl, "");
-          showMsg(passMsgEl, "");
-          showMsg(generalMsgEl, "");
-        }
+        btn.disabled = true;
 
-        function submitLogin() {
-          clearMsgs();
-
-          var username = (usernameEl.value || "").trim();
-          var password = passwordEl.value || "";
-
-          var hasError = false;
-          if (!username) {
-            showMsg(userMsgEl, "Please enter your username.");
-            hasError = true;
-          }
-          if (!password) {
-            showMsg(passMsgEl, "Please enter your password.");
-            hasError = true;
-          }
-          if (hasError) {
-            return;
-          }
-
-          btn.disabled = true;
-
-          fetch("/api/AuthLogin", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              username: username,
-              password: password,
-            }),
+        fetch("/api/AuthLogin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            username: username,
+            password: password,
+          }),
+        })
+          .then(function (res) {
+            return res.json();
           })
-            .then(function (res) {
-              return res.json();
-            })
-            .then(function (data) {
-              if (data && data.success) {
-                window.location.href = "https://dashboard.infjew.com";
-                return;
-              }
-              showMsg(generalMsgEl, (data && data.message) || "Login failed");
-            })
-            .catch(function (err) {
-              console.error("Login failed", err);
-              showMsg(generalMsgEl, "Login failed");
-            })
-            .finally(function () {
-              btn.disabled = false;
-            });
-        }
+          .then(function (data) {
+            if (data && data.success) {
+              window.location.href = "https://dashboard.infjew.com";
+              return;
+            }
+            showMsg(generalMsgEl, (data && data.message) || "Login failed");
+          })
+          .catch(function (err) {
+            console.error("Login failed", err);
+            showMsg(generalMsgEl, "Login failed");
+          })
+          .finally(function () {
+            btn.disabled = false;
+          });
+      }
 
-        btn.addEventListener("click", submitLogin);
-        passwordEl.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            submitLogin();
-          }
-        });
-      })();
-    </script>
-  </body>
+      btn.addEventListener("click", submitLogin);
+      passwordEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          submitLogin();
+        }
+      });
+    })();
+  </script>
+</body>
+
 </html>
