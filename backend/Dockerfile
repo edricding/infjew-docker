@@ -21,6 +21,7 @@ RUN addgroup -S app && adduser -S app -G app
 
 WORKDIR /app
 COPY --from=builder /out/backend ./backend
+COPY frontend/templates /app/templates
 
 USER app
 EXPOSE 8080

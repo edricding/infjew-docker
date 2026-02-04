@@ -57,6 +57,7 @@ func main() {
 	mux.Handle("/api/public/banners", ApplyMiddlewares(http.HandlerFunc(handlers.PublicGetBannersHandler), middleware.WithCORS))
 	mux.Handle("/api/public/countingdown", ApplyMiddlewares(http.HandlerFunc(handlers.PublicGetCountingDownHandler), middleware.WithCORS))
 	mux.Handle("/api/public/preciouslist", ApplyMiddlewares(http.HandlerFunc(handlers.PublicGetPreciousItemsHandler), middleware.WithCORS))
+	mux.Handle("/api/contact", ApplyMiddlewares(http.HandlerFunc(handlers.ContactFormHandler), middleware.WithCORS))
 
 	fmt.Println("Server listening on :8080...")
 	if err := http.ListenAndServe(":8080", mux); err != nil {

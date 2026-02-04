@@ -190,7 +190,9 @@
                     </div>
                   </div>
 
+                  <input type="hidden" id="contact-recaptcha-token" />
                   <a href="#" class="main-btn" id="contact-form-btn">Submit</a>
+                  <div id="contact-form-msg" style="margin-top: 12px; font-size: 14px; display: none;"></div>
                   
                 </form>
               </div>
@@ -308,10 +310,98 @@
   <script src="/js/nouislider.js"></script>
   <!-- Progress Bar JS -->
   <script src="/js/jquery.barfiller.js"></script>
-  <!-- recaptcha -->
-  <script src="https://www.google.com/recaptcha/api.js"></script>
+  <!-- recaptcha v3 -->
+  <script src="https://www.google.com/recaptcha/api.js?render=6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr"></script>
   <!-- Main JS -->
   <script src="/js/main.js"></script>
+  <script>
+    (function () {
+      var submitBtn = document.getElementById("contact-form-btn");
+      var tokenEl = document.getElementById("contact-recaptcha-token");
+      var nameEl = document.getElementById("contact-form-name");
+      var emailEl = document.getElementById("contact-form-email");
+      var messageEl = document.getElementById("contact-form-message");
+      var msgEl = document.getElementById("contact-form-msg");
+      if (!submitBtn || !tokenEl) {
+        return;
+      }
+
+      function showMsg(text, type) {
+        if (!msgEl) return;
+        if (!text) {
+          msgEl.style.display = "none";
+          msgEl.textContent = "";
+          return;
+        }
+        msgEl.textContent = text;
+        msgEl.style.display = "block";
+        msgEl.style.color = type === "success" ? "#70bb63" : "#ed6060";
+      }
+
+      function isValidEmail(email) {
+        return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+      }
+
+      submitBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        showMsg("");
+        var name = nameEl ? nameEl.value.trim() : "";
+        var email = emailEl ? emailEl.value.trim() : "";
+        var message = messageEl ? messageEl.value.trim() : "";
+
+        if (!name || !email || !message) {
+          showMsg("Please fill in all fields.");
+          return;
+        }
+        if (!isValidEmail(email)) {
+          showMsg("Please enter a valid email.");
+          return;
+        }
+
+        if (!window.grecaptcha) {
+          console.warn("reCAPTCHA not ready");
+          showMsg("reCAPTCHA not ready.");
+          return;
+        }
+
+        grecaptcha.ready(function () {
+          grecaptcha
+            .execute("6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr", { action: "contact" })
+            .then(function (token) {
+              tokenEl.value = token;
+              return fetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name: name,
+                  email: email,
+                  message: message,
+                  recaptchaToken: token,
+                }),
+              });
+            })
+            .then(function (res) {
+              return res.json();
+            })
+            .then(function (data) {
+              if (data && data.success) {
+                showMsg("Message sent.", "success");
+                if (nameEl) nameEl.value = "";
+                if (emailEl) emailEl.value = "";
+                if (messageEl) messageEl.value = "";
+                return;
+              }
+              showMsg((data && data.message) || "Send failed.");
+            })
+            .catch(function (err) {
+              console.error("reCAPTCHA failed", err);
+              showMsg("Send failed.");
+            });
+        });
+      });
+    })();
+  </script>
 </body>
 
 </html>
