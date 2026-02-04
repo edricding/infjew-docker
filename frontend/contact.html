@@ -326,6 +326,10 @@
         return;
       }
 
+      if (window.jQuery) {
+        window.jQuery("#contact-form-btn").off("click");
+      }
+
       function showMsg(text, type) {
         if (!msgEl) return;
         if (!text) {
