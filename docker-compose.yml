@@ -5,6 +5,7 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       MYSQL_DSN: ${MYSQL_DSN}
+      RECAPTCHA_SECRET: ${RECAPTCHA_SECRET}
     restart: unless-stopped
     depends_on:
       - mysql
