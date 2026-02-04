@@ -88,6 +88,7 @@ func ContactFormHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := buildContactEmail(req.Name, req.Email, req.Message)
 	if err != nil {
+		fmt.Printf("Contact email template error: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -97,6 +98,7 @@ func ContactFormHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := sendContactEmail(body); err != nil {
+		fmt.Printf("Contact email send error: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
