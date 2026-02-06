@@ -190,6 +190,7 @@ function renderPreciousList(data) {
           data-bs-toggle="tooltip"
           data-bs-trigger="hover"
           data-bs-title="${safeTooltipValue}"
+          title="${safeTooltipValue}"
         >
           <i class="ti ti-link"></i>
         </a>`
@@ -263,17 +264,39 @@ function renderPreciousList(data) {
     data: data,
   });
 
-  preciousGrid.on("ready", () => {
-    const tooltipTriggerList = [].slice.call(
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    );
-    tooltipTriggerList.forEach((el) => {
-      // eslint-disable-next-line no-new
-      new bootstrap.Tooltip(el);
+  const initTooltips = (scopeEl = container) => {
+    if (!window.bootstrap || !window.bootstrap.Tooltip) {
+      return;
+    }
+
+    scopeEl.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+      bootstrap.Tooltip.getOrCreateInstance(el);
     });
+  };
+
+  preciousGrid.on("ready", () => {
+    initTooltips(container);
   });
 
   preciousGrid.render(container);
+  setTimeout(() => {
+    initTooltips(container);
+  }, 0);
+
+  if (!container.dataset.tooltipDelegated) {
+    container.addEventListener(
+      "mouseenter",
+      (event) => {
+        const trigger = event.target.closest('[data-bs-toggle="tooltip"]');
+        if (!trigger || !window.bootstrap || !window.bootstrap.Tooltip) {
+          return;
+        }
+        bootstrap.Tooltip.getOrCreateInstance(trigger);
+      },
+      true
+    );
+    container.dataset.tooltipDelegated = "1";
+  }
 }
 
 function reRenderPreciousList(data) {
