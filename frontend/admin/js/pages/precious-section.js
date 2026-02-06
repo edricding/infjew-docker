@@ -1,5 +1,11 @@
 window.bannerList = [];
 window.countingDown = [];
+const BANNER_SOURCE_TBODY_ID = "index-banner-list-tbody";
+const BANNER_TARGET_TBODY_ID = "index-banner-list-target-tbody";
+let draggedBannerRow = null;
+let dragArmedBannerRow = null;
+let isBannerHandleArmed = false;
+let bannerDragBindingsInitialized = false;
 
 
 window.addEventListener("DOMContentLoaded", function () {
@@ -145,6 +151,179 @@ function initTooltipsIn(scopeEl) {
     el.setAttribute("title", safeTitle);
     bootstrap.Tooltip.getOrCreateInstance(el);
   });
+}
+
+function getBannerDropZones() {
+  const sourceZone = document.getElementById(BANNER_SOURCE_TBODY_ID);
+  const targetZone = document.getElementById(BANNER_TARGET_TBODY_ID);
+  return [sourceZone, targetZone].filter((zone) => !!zone);
+}
+
+function createBannerEmptyRow() {
+  const row = document.createElement("tr");
+  row.className = "banner-empty-row";
+  row.innerHTML = '<td colspan="8" class="text-center text-muted py-3">Drop banners here</td>';
+  return row;
+}
+
+function syncBannerContainerEmptyRows() {
+  getBannerDropZones().forEach((zone) => {
+    const dataRows = zone.querySelectorAll("tr.banner-row");
+    const emptyRow = zone.querySelector("tr.banner-empty-row");
+
+    if (dataRows.length === 0) {
+      if (!emptyRow) {
+        zone.appendChild(createBannerEmptyRow());
+      }
+      return;
+    }
+
+    if (emptyRow) {
+      emptyRow.remove();
+    }
+  });
+}
+
+function getBannerDropAfterElement(container, mouseY) {
+  const draggableRows = Array.from(
+    container.querySelectorAll("tr.banner-row:not(.banner-row-dragging)")
+  );
+
+  return draggableRows.reduce(
+    (closest, row) => {
+      const box = row.getBoundingClientRect();
+      const offset = mouseY - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: row };
+      }
+      return closest;
+    },
+    { offset: Number.NEGATIVE_INFINITY, element: null }
+  ).element;
+}
+
+function cleanupBannerDragState() {
+  if (draggedBannerRow) {
+    draggedBannerRow.classList.remove("banner-row-dragging");
+    draggedBannerRow = null;
+  }
+
+  if (dragArmedBannerRow) {
+    dragArmedBannerRow.removeAttribute("draggable");
+  }
+
+  document
+    .querySelectorAll("tr.banner-row[draggable='true']")
+    .forEach((row) => row.removeAttribute("draggable"));
+
+  getBannerDropZones().forEach((zone) => {
+    zone.classList.remove("is-drag-over");
+  });
+
+  dragArmedBannerRow = null;
+  isBannerHandleArmed = false;
+}
+
+function initBannerDragAndDrop() {
+  if (bannerDragBindingsInitialized) {
+    return;
+  }
+
+  const zones = getBannerDropZones();
+  if (zones.length === 0) {
+    return;
+  }
+
+  document.addEventListener("mousedown", function (event) {
+    const handle = event.target.closest(".banner-drag-handle");
+    if (!handle) {
+      isBannerHandleArmed = false;
+      dragArmedBannerRow = null;
+      return;
+    }
+
+    const row = handle.closest("tr.banner-row");
+    if (!row) {
+      return;
+    }
+
+    isBannerHandleArmed = true;
+    dragArmedBannerRow = row;
+    row.setAttribute("draggable", "true");
+  });
+
+  document.addEventListener("mouseup", function () {
+    if (draggedBannerRow) {
+      return;
+    }
+    cleanupBannerDragState();
+  });
+
+  zones.forEach((zone) => {
+    zone.addEventListener("dragstart", function (event) {
+      const row = event.target.closest("tr.banner-row");
+      if (!row || !isBannerHandleArmed || row !== dragArmedBannerRow) {
+        event.preventDefault();
+        return;
+      }
+
+      draggedBannerRow = row;
+      row.classList.add("banner-row-dragging");
+
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", row.dataset.bannerId || "");
+      }
+    });
+
+    zone.addEventListener("dragover", function (event) {
+      if (!draggedBannerRow) {
+        return;
+      }
+
+      event.preventDefault();
+      zone.classList.add("is-drag-over");
+
+      const afterElement = getBannerDropAfterElement(zone, event.clientY);
+      if (!afterElement) {
+        zone.appendChild(draggedBannerRow);
+      } else {
+        zone.insertBefore(draggedBannerRow, afterElement);
+      }
+    });
+
+    zone.addEventListener("dragleave", function (event) {
+      const relatedTarget = event.relatedTarget;
+      if (relatedTarget && zone.contains(relatedTarget)) {
+        return;
+      }
+      zone.classList.remove("is-drag-over");
+    });
+
+    zone.addEventListener("drop", function (event) {
+      if (!draggedBannerRow) {
+        return;
+      }
+
+      event.preventDefault();
+      const afterElement = getBannerDropAfterElement(zone, event.clientY);
+      if (!afterElement) {
+        zone.appendChild(draggedBannerRow);
+      } else {
+        zone.insertBefore(draggedBannerRow, afterElement);
+      }
+
+      zone.classList.remove("is-drag-over");
+      syncBannerContainerEmptyRows();
+    });
+  });
+
+  document.addEventListener("dragend", function () {
+    syncBannerContainerEmptyRows();
+    cleanupBannerDragState();
+  });
+
+  bannerDragBindingsInitialized = true;
 }
 
 function getCountingDownPreciousForm() {
@@ -347,10 +526,17 @@ function fillCountingDownModal(data) {
 }
 
 function renderBannerTable(data) {
-  const tableBody = document.getElementById("index-banner-list-tbody");
+  const sourceTableBody = document.getElementById(BANNER_SOURCE_TBODY_ID);
+  const targetTableBody = document.getElementById(BANNER_TARGET_TBODY_ID);
 
+  if (!sourceTableBody) {
+    return;
+  }
 
-  tableBody.innerHTML = "";
+  sourceTableBody.innerHTML = "";
+  if (targetTableBody) {
+    targetTableBody.innerHTML = "";
+  }
 
   data.forEach((item) => {
     const pictureUrl = toDisplayText(item.picurl, "");
@@ -369,13 +555,26 @@ function renderBannerTable(data) {
         data-bs-trigger="hover"
         data-bs-title="${escapeHtmlAttr(linkUrl)}"
         title="${escapeHtmlAttr(linkUrl)}"
-      >
-        <i class="ti ti-link"></i>
-      </a>`;
+        >
+          <i class="ti ti-link"></i>
+        </a>`;
 
     const row = document.createElement("tr");
+    row.classList.add("banner-row");
+    row.dataset.bannerId = toDisplayText(item.id, "");
 
     row.innerHTML = `
+      <td class="text-muted align-middle">
+        <span
+          class="banner-drag-handle d-inline-flex align-items-center justify-content-center fs-18 p-1"
+          data-bs-toggle="tooltip"
+          data-bs-trigger="hover"
+          data-bs-title="Drag by handle"
+          title="Drag by handle"
+        >
+          <i class="ti ti-grip-vertical"></i>
+        </span>
+      </td>
       <td>
         ${imageCellHtml}
       </td>
@@ -399,11 +598,16 @@ function renderBannerTable(data) {
       </td>
     `;
 
-    tableBody.appendChild(row);
+    sourceTableBody.appendChild(row);
   });
 
 
-  initTooltipsIn(tableBody);
+  syncBannerContainerEmptyRows();
+  initTooltipsIn(sourceTableBody);
+  if (targetTableBody) {
+    initTooltipsIn(targetTableBody);
+  }
+  initBannerDragAndDrop();
 }
 
 function toggleAddBannerButton(data) {
