@@ -227,18 +227,16 @@ function renderCountingDownTable(data) {
         class="me-2 avatar-xl"
       />`
     : "-";
-  const linkCellHtml = linkUrl === "-"
-    ? "-"
-    : `<a
-        href="javascript:void(0);"
-        class="link-reset fs-20 p-1 text-infjew"
-        data-bs-toggle="tooltip"
-        data-bs-trigger="hover"
-        data-bs-title="${escapeHtmlAttr(linkUrl)}"
-        title="${escapeHtmlAttr(linkUrl)}"
-      >
-        <i class="ti ti-link"></i>
-      </a>`;
+  const linkCellHtml = `<a
+      href="javascript:void(0);"
+      class="link-reset fs-20 p-1 text-infjew"
+      data-bs-toggle="tooltip"
+      data-bs-trigger="hover"
+      data-bs-title="${escapeHtmlAttr(linkUrl)}"
+      title="${escapeHtmlAttr(linkUrl)}"
+    >
+      <i class="ti ti-link"></i>
+    </a>`;
 
   const row = document.createElement("tr");
 
@@ -364,18 +362,16 @@ function renderBannerTable(data) {
           class="me-2 avatar-xl"
         />`
       : "-";
-    const linkCellHtml = linkUrl === "-"
-      ? "-"
-      : `<a
-          href="javascript:void(0);"
-          class="link-reset fs-20 p-1 text-infjew"
-          data-bs-toggle="tooltip"
-          data-bs-trigger="hover"
-          data-bs-title="${escapeHtmlAttr(linkUrl)}"
-          title="${escapeHtmlAttr(linkUrl)}"
-        >
-          <i class="ti ti-link"></i>
-        </a>`;
+    const linkCellHtml = `<a
+        href="javascript:void(0);"
+        class="link-reset fs-20 p-1 text-infjew"
+        data-bs-toggle="tooltip"
+        data-bs-trigger="hover"
+        data-bs-title="${escapeHtmlAttr(linkUrl)}"
+        title="${escapeHtmlAttr(linkUrl)}"
+      >
+        <i class="ti ti-link"></i>
+      </a>`;
 
     const row = document.createElement("tr");
 
