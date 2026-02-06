@@ -172,6 +172,30 @@ function renderPreciousList(data) {
   const container = document.getElementById("table-gridjs");
   container.innerHTML = "";
 
+  const escapeHtmlAttr = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+  const renderTooltipLink = (value) => {
+    const tooltipValue = String(value ?? "").trim() || "-";
+    const safeTooltipValue = escapeHtmlAttr(tooltipValue);
+    return gridjs.html(
+      `<a
+          href="javascript:void(0);"
+          class="link-reset fs-20 p-1 text-infjew"
+          data-bs-toggle="tooltip"
+          data-bs-trigger="hover"
+          data-bs-title="${safeTooltipValue}"
+        >
+          <i class="ti ti-link"></i>
+        </a>`
+    );
+  };
+
   const preciousGrid = new gridjs.Grid({
     columns: [
       { name: "ID", width: "50px" },
@@ -206,26 +230,12 @@ function renderPreciousList(data) {
       {
         name: "Url",
         width: "50px",
-        formatter: (e) =>
-          gridjs.html(
-            `<a class="link-reset fs-20 p-1 text-infjew"
-                data-bs-toggle="tooltip"
-                data-bs-trigger="hover"
-                data-bs-title="${e}">
-                <i class="ti ti-link"></i></a>`
-          ),
+        formatter: (e) => renderTooltipLink(e),
       },
       {
         name: "PicUrl",
         width: "50px",
-        formatter: (e) =>
-          gridjs.html(
-            `<a class="link-reset fs-20 p-1 text-info"
-                data-bs-toggle="tooltip"
-                data-bs-trigger="hover"
-                data-bs-title="${e}">
-                <i class="ti ti-link"></i></a>`
-          ),
+        formatter: (e) => renderTooltipLink(e),
       },
       {
         name: "Action",
