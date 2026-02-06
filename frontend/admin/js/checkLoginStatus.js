@@ -2,6 +2,7 @@ window.addEventListener("DOMContentLoaded", function () {
   fetch("/api/session/status", {
     method: "GET",
     credentials: "include",
+    cache: "no-store",
   })
     .then((res) => res.json())
     .then((data) => {

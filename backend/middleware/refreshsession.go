@@ -13,7 +13,7 @@ func WithSessionRefresh(next http.Handler) http.Handler {
 		sess, _ := session.Store.Get(r, "session-id")
 
 		if username, ok := sess.Values["username"].(string); ok && username != "" {
-			sess.Options.MaxAge = 3600
+			sess.Options = session.CookieOptions(session.SessionMaxAgeSeconds)
 			sess.Values["expiresAt"] = time.Now().Add(time.Hour).Unix()
 			sess.Save(r, w)
 		}

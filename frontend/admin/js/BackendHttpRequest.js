@@ -55,7 +55,9 @@
 
   if ((usernameElements && usernameElements.length > 0) || (sessionRemainingElements && sessionRemainingElements.length > 0)) {
     fetch("/api/session/status", {
+      method: "GET",
       credentials: "include",
+      cache: "no-store",
     })
       .then(function (res) {
         return res.json();

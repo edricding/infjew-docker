@@ -9,20 +9,6 @@
   <!-- App favicon -->
   <link rel="shortcut icon" href="https://storage.googleapis.com/bucket-infjew/INFJEW/backend/images/favicon.jpg" />
 
-  <script>
-    window.addEventListener("DOMContentLoaded", function () {
-      fetch("/api/session/status", {
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.loggedIn) {
-            window.location.href = "https://dashboard.infjew.com";
-          }
-        });
-    });
-  </script>
-
   <!-- Theme Config Js -->
   <script src="/js/config.js"></script>
 
@@ -108,6 +94,7 @@
       var userMsgEl = document.getElementById("login-username-msg");
       var passMsgEl = document.getElementById("login-password-msg");
       var generalMsgEl = document.getElementById("login-general-msg");
+      var loginForm = document.querySelector("form.needs-validation");
 
       function showMsg(el, msg) {
         if (!el) {
@@ -128,11 +115,54 @@
         showMsg(generalMsgEl, "");
       }
 
-        function submitLogin() {
-          clearMsgs();
+      function delay(ms) {
+        return new Promise(function (resolve) {
+          setTimeout(resolve, ms);
+        });
+      }
 
-          var username = (usernameEl.value || "").trim();
-          var password = passwordEl.value || "";
+      function redirectToDashboardWhenReady(maxAttempts, delayMs) {
+        var attemptsLeft = typeof maxAttempts === "number" ? maxAttempts : 30;
+        var waitMs = typeof delayMs === "number" ? delayMs : 120;
+
+        function check() {
+          return fetch("/api/session/require", {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          })
+            .then(function (res) {
+              if (res.status === 204) {
+                window.location.replace("/");
+                return true;
+              }
+              if (attemptsLeft <= 1) {
+                return false;
+              }
+              attemptsLeft -= 1;
+              return delay(waitMs).then(check);
+            })
+            .catch(function () {
+              if (attemptsLeft <= 1) {
+                return false;
+              }
+              attemptsLeft -= 1;
+              return delay(waitMs).then(check);
+            });
+        }
+
+        return check();
+      }
+
+      function submitLogin() {
+        if (btn.disabled) {
+          return;
+        }
+
+        clearMsgs();
+
+        var username = (usernameEl.value || "").trim();
+        var password = passwordEl.value || "";
 
         var hasError = false;
         if (!username) {
@@ -147,54 +177,83 @@
           return;
         }
 
-          btn.disabled = true;
+        btn.disabled = true;
 
-          if (!window.grecaptcha) {
-            showMsg(generalMsgEl, "reCAPTCHA not ready.");
-            btn.disabled = false;
-            return;
-          }
-
-          grecaptcha.ready(function () {
-            grecaptcha
-              .execute("6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr", { action: "login" })
-              .then(function (token) {
-                return fetch("/api/AuthLogin", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  credentials: "include",
-                  body: JSON.stringify({
-                    username: username,
-                    password: password,
-                    recaptchaToken: token,
-                  }),
-                });
-              })
-              .then(function (res) {
-                return res.json();
-              })
-              .then(function (data) {
-                if (data && data.success) {
-                  window.location.href = "https://dashboard.infjew.com";
-                  return;
-                }
-                showMsg(generalMsgEl, (data && data.message) || "Login failed");
-              })
-              .catch(function (err) {
-                console.error("Login failed", err);
-                showMsg(generalMsgEl, "Login failed");
-              })
-              .then(function () {
-                btn.disabled = false;
-              });
-          });
+        if (!window.grecaptcha) {
+          showMsg(generalMsgEl, "reCAPTCHA not ready.");
+          btn.disabled = false;
+          return;
         }
 
+        grecaptcha.ready(function () {
+          grecaptcha
+            .execute("6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr", { action: "login" })
+            .then(function (token) {
+              return fetch("/api/AuthLogin", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                  username: username,
+                  password: password,
+                  recaptchaToken: token,
+                }),
+              });
+            })
+            .then(function (res) {
+              return res.json();
+            })
+            .then(function (data) {
+              if (data && data.success) {
+                return redirectToDashboardWhenReady(50, 120).then(function (redirected) {
+                  if (!redirected) {
+                    showMsg(generalMsgEl, "Login succeeded, but session is not ready. Please retry.");
+                  }
+                });
+              }
+              showMsg(generalMsgEl, (data && data.message) || "Login failed");
+            })
+            .catch(function (err) {
+              console.error("Login failed", err);
+              showMsg(generalMsgEl, "Login failed");
+            })
+            .then(function () {
+              btn.disabled = false;
+            });
+        });
+      }
+
+      window.addEventListener("DOMContentLoaded", function () {
+        fetch("/api/session/status", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        })
+          .then(function (res) {
+            return res.json();
+          })
+          .then(function (data) {
+            if (data && data.loggedIn) {
+              return redirectToDashboardWhenReady(10, 120);
+            }
+          })
+          .catch(function () {});
+      });
+
       btn.addEventListener("click", submitLogin);
+
+      if (loginForm) {
+        loginForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+          submitLogin();
+        });
+      }
+
       passwordEl.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
+          e.preventDefault();
           submitLogin();
         }
       });

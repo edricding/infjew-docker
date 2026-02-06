@@ -9,18 +9,27 @@ import (
 )
 
 var Store = sessions.NewCookieStore([]byte("infinityjewelry")) // TODO: replace with stronger secret
+const SessionMaxAgeSeconds = 3600
+
+func init() {
+	Store.Options = CookieOptions(SessionMaxAgeSeconds)
+}
+
+func CookieOptions(maxAge int) *sessions.Options {
+	return &sessions.Options{
+		Path:     "/",
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	}
+}
 
 func InitSession(w http.ResponseWriter, r *http.Request, username string) error {
 	session, _ := Store.Get(r, "session-id")
 	session.Values["username"] = username
 	session.Values["expiresAt"] = time.Now().Add(time.Hour).Unix()
-	session.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   3600,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
-	}
+	session.Options = CookieOptions(SessionMaxAgeSeconds)
 	return session.Save(r, w)
 }
 
@@ -32,18 +41,13 @@ func GetUsername(r *http.Request) (string, bool) {
 
 func ClearSession(w http.ResponseWriter, r *http.Request) {
 	session, _ := Store.Get(r, "session-id")
-	session.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
-	}
+	session.Options = CookieOptions(-1)
 	session.Save(r, w)
 }
 
 func SessionStatusHandler(w http.ResponseWriter, r *http.Request) {
 	username, ok := GetUsername(r)
+	setNoStoreHeaders(w)
 	w.Header().Set("Content-Type", "application/json")
 
 	if ok {
@@ -63,6 +67,7 @@ func SessionStatusHandler(w http.ResponseWriter, r *http.Request) {
 // RequireAuthHandler returns 204 if logged in, otherwise 401.
 // Intended for nginx auth_request.
 func RequireAuthHandler(w http.ResponseWriter, r *http.Request) {
+	setNoStoreHeaders(w)
 	_, ok := GetUsername(r)
 	if ok {
 		w.WriteHeader(http.StatusNoContent)
@@ -75,4 +80,10 @@ func sessionExpiresAt(r *http.Request) (int64, bool) {
 	session, _ := Store.Get(r, "session-id")
 	expiresAt, ok := session.Values["expiresAt"].(int64)
 	return expiresAt, ok
+}
+
+func setNoStoreHeaders(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 }
