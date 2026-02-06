@@ -44,14 +44,15 @@ CREATE TABLE `banner`  (
   `subtitle` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `picurl` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `sort_order` int NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of banner
 -- ----------------------------
-INSERT INTO `banner` VALUES (1, 'New Collections', 'Coming up', 'Trending products of Summer 2025', 'https://www.baidu.com', 'https://storage.googleapis.com/bucket-infjew/Banner/test/hero-1.jpg');
-INSERT INTO `banner` VALUES (2, 'Discover the Beauty of', 'Craftsmanship', 'Documentary Video Film', 'https://www.youtube.com', 'https://storage.googleapis.com/bucket-infjew/INFJEW/frontend/images/about/about-1.jpg');
+INSERT INTO `banner` VALUES (1, 'New Collections', 'Coming up', 'Trending products of Summer 2025', 'https://www.baidu.com', 'https://storage.googleapis.com/bucket-infjew/Banner/test/hero-1.jpg', 1);
+INSERT INTO `banner` VALUES (2, 'Discover the Beauty of', 'Craftsmanship', 'Documentary Video Film', 'https://www.youtube.com', 'https://storage.googleapis.com/bucket-infjew/INFJEW/frontend/images/about/about-1.jpg', 2);
 
 -- ----------------------------
 -- Table structure for countingDown

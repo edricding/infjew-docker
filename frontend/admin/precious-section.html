@@ -17,6 +17,7 @@
 
 <!-- Vendor css -->
 <link href="/css/vendor.min.css" rel="stylesheet" type="text/css" />
+<link href="/vendor/dragula/dragula.min.css" rel="stylesheet" type="text/css" />
 
 <!-- App css -->
 <link href="/css/app.css" rel="stylesheet" type="text/css" id="app-style" />
@@ -24,20 +25,16 @@
 <!-- Icons css -->
 <link href="/css/icons.min.css" rel="stylesheet" type="text/css" />
 <style>
-  .banner-drag-handle {
+  .dragula-handle {
     cursor: grab;
   }
 
-  .banner-drag-handle:active {
+  .dragula-handle:active {
     cursor: grabbing;
   }
 
   .banner-row-dragging {
     opacity: 0.65;
-  }
-
-  .banner-drop-zone.is-drag-over {
-    background-color: rgba(13, 110, 253, 0.06);
   }
 </style>
 </head>
@@ -217,61 +214,28 @@
               </div>
               <div class="card-body">
                 <p class="text-muted mb-3">
-                  Move stuff between containers using handle.
+                  Drag to reorder banners using handle.
                 </p>
-                <div class="row g-3">
-                  <div class="col-12 col-xl-6">
-                    <div class="border rounded p-2">
-                      <h6 class="mb-2">Container A</h6>
-                      <div class="table-responsive-sm">
-                        <table class="table table-sm mb-0">
-                          <thead>
-                            <tr>
-                              <th style="width: 44px">#</th>
-                              <th>Image</th>
-                              <th>ID</th>
-                              <th>Title - Line 1</th>
-                              <th>Title - Line 2</th>
-                              <th>Subtitle</th>
-                              <th>Link</th>
-                              <th>Action</th>
-                            </tr>
-                          </thead>
-                          <tbody id="index-banner-list-tbody" class="banner-drop-zone">
-                            <tr class="banner-empty-row">
-                              <td colspan="8" class="text-center text-muted py-3">Drop banners here</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12 col-xl-6">
-                    <div class="border rounded p-2">
-                      <h6 class="mb-2">Container B</h6>
-                      <div class="table-responsive-sm">
-                        <table class="table table-sm mb-0">
-                          <thead>
-                            <tr>
-                              <th style="width: 44px">#</th>
-                              <th>Image</th>
-                              <th>ID</th>
-                              <th>Title - Line 1</th>
-                              <th>Title - Line 2</th>
-                              <th>Subtitle</th>
-                              <th>Link</th>
-                              <th>Action</th>
-                            </tr>
-                          </thead>
-                          <tbody id="index-banner-list-target-tbody" class="banner-drop-zone">
-                            <tr class="banner-empty-row">
-                              <td colspan="8" class="text-center text-muted py-3">Drop banners here</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
+                <div class="table-responsive-sm">
+                  <table class="table table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th style="width: 44px">#</th>
+                        <th>Image</th>
+                        <th>ID</th>
+                        <th>Title - Line 1</th>
+                        <th>Title - Line 2</th>
+                        <th>Subtitle</th>
+                        <th>Link</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="index-banner-list-tbody">
+                      <tr class="banner-empty-row">
+                        <td colspan="8" class="text-center text-muted py-3">No banners</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
                 <!-- end table-responsive-->
               </div>
@@ -610,7 +574,7 @@
   <!-- App js -->
   <script src="/js/app.js"></script>
 
-  <script src="/js/vendor/dragula/dragula.min.js"></script>
+  <script src="/vendor/dragula/dragula.min.js"></script>
   <script src="/js/pages/precious-section.js"></script>
 
   <script src="/js/BackendHttpRequest.js"></script>

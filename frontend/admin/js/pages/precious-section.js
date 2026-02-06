@@ -1,35 +1,12 @@
 window.bannerList = [];
 window.countingDown = [];
-const BANNER_SOURCE_TBODY_ID = "index-banner-list-tbody";
-const BANNER_TARGET_TBODY_ID = "index-banner-list-target-tbody";
-let draggedBannerRow = null;
-let dragArmedBannerRow = null;
-let isBannerHandleArmed = false;
-let bannerDragBindingsInitialized = false;
+const BANNER_TBODY_ID = "index-banner-list-tbody";
+let bannerSortDrake = null;
+let isPersistingBannerOrder = false;
 
 
 window.addEventListener("DOMContentLoaded", function () {
-  fetch("/api/banners", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        console.log("Banner ", data.data);
-        bannerList = data.data;
-        renderBannerTable(bannerList);
-        toggleAddBannerButton(bannerList);
-      } else {
-        console.log(" Banner :", data.message);
-      }
-    })
-    .catch((error) => {
-      console.error(":", error);
-    });
+  fetchAndRenderBanners();
 
   fetch("/api/countingdown", {
     method: "GET",
@@ -110,6 +87,30 @@ window.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+function fetchAndRenderBanners() {
+  return fetch("/api/banners", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    cache: "no-store",
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        bannerList = Array.isArray(data.data) ? data.data : [];
+        renderBannerTable(bannerList);
+        toggleAddBannerButton(bannerList);
+      } else {
+        console.log(" Banner :", data.message);
+      }
+    })
+    .catch((error) => {
+      console.error(":", error);
+    });
+}
+
 function getAddBannerForm() {
   const newBanner = {
     title1: document.getElementById("add-banner-title-1").value.trim(),
@@ -153,177 +154,113 @@ function initTooltipsIn(scopeEl) {
   });
 }
 
-function getBannerDropZones() {
-  const sourceZone = document.getElementById(BANNER_SOURCE_TBODY_ID);
-  const targetZone = document.getElementById(BANNER_TARGET_TBODY_ID);
-  return [sourceZone, targetZone].filter((zone) => !!zone);
-}
-
 function createBannerEmptyRow() {
   const row = document.createElement("tr");
   row.className = "banner-empty-row";
-  row.innerHTML = '<td colspan="8" class="text-center text-muted py-3">Drop banners here</td>';
+  row.innerHTML = '<td colspan="8" class="text-center text-muted py-3">No banners</td>';
   return row;
 }
 
-function syncBannerContainerEmptyRows() {
-  getBannerDropZones().forEach((zone) => {
-    const dataRows = zone.querySelectorAll("tr.banner-row");
-    const emptyRow = zone.querySelector("tr.banner-empty-row");
+function syncBannerEmptyRow() {
+  const zone = document.getElementById(BANNER_TBODY_ID);
+  if (!zone) {
+    return;
+  }
 
-    if (dataRows.length === 0) {
-      if (!emptyRow) {
-        zone.appendChild(createBannerEmptyRow());
-      }
-      return;
-    }
+  const dataRows = zone.querySelectorAll("tr.banner-row");
+  const emptyRow = zone.querySelector("tr.banner-empty-row");
 
-    if (emptyRow) {
-      emptyRow.remove();
+  if (dataRows.length === 0) {
+    if (!emptyRow) {
+      zone.appendChild(createBannerEmptyRow());
     }
-  });
+  } else if (emptyRow) {
+    emptyRow.remove();
+  }
 }
 
-function getBannerDropAfterElement(container, mouseY) {
-  const draggableRows = Array.from(
-    container.querySelectorAll("tr.banner-row:not(.banner-row-dragging)")
-  );
+function collectBannerOrderIds() {
+  const tbody = document.getElementById(BANNER_TBODY_ID);
+  if (!tbody) {
+    return [];
+  }
 
-  return draggableRows.reduce(
-    (closest, row) => {
-      const box = row.getBoundingClientRect();
-      const offset = mouseY - box.top - box.height / 2;
-      if (offset < 0 && offset > closest.offset) {
-        return { offset: offset, element: row };
-      }
-      return closest;
+  return Array.from(tbody.querySelectorAll("tr.banner-row"))
+    .map((row) => Number.parseInt(row.dataset.bannerId || "", 10))
+    .filter((id) => Number.isInteger(id) && id > 0);
+}
+
+function saveBannerOrder() {
+  if (isPersistingBannerOrder) {
+    return;
+  }
+
+  const ids = collectBannerOrderIds();
+  if (!ids.length) {
+    return;
+  }
+
+  isPersistingBannerOrder = true;
+  fetch("/api/banner/reorder", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-    { offset: Number.NEGATIVE_INFINITY, element: null }
-  ).element;
-}
+    credentials: "include",
+    body: JSON.stringify({ ids: ids }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data || !data.success) {
+        console.error("Save banner order failed", data && data.message);
+        fetchAndRenderBanners();
+        return;
+      }
 
-function cleanupBannerDragState() {
-  if (draggedBannerRow) {
-    draggedBannerRow.classList.remove("banner-row-dragging");
-    draggedBannerRow = null;
-  }
-
-  if (dragArmedBannerRow) {
-    dragArmedBannerRow.removeAttribute("draggable");
-  }
-
-  document
-    .querySelectorAll("tr.banner-row[draggable='true']")
-    .forEach((row) => row.removeAttribute("draggable"));
-
-  getBannerDropZones().forEach((zone) => {
-    zone.classList.remove("is-drag-over");
-  });
-
-  dragArmedBannerRow = null;
-  isBannerHandleArmed = false;
+      bannerList = Array.isArray(data.data) ? data.data : bannerList;
+    })
+    .catch((error) => {
+      console.error("Save banner order failed", error);
+      fetchAndRenderBanners();
+    })
+    .finally(() => {
+      isPersistingBannerOrder = false;
+    });
 }
 
 function initBannerDragAndDrop() {
-  if (bannerDragBindingsInitialized) {
+  const tbody = document.getElementById(BANNER_TBODY_ID);
+  if (!tbody || typeof dragula !== "function") {
     return;
   }
 
-  const zones = getBannerDropZones();
-  if (zones.length === 0) {
-    return;
+  if (bannerSortDrake) {
+    bannerSortDrake.destroy();
+    bannerSortDrake = null;
   }
 
-  document.addEventListener("mousedown", function (event) {
-    const handle = event.target.closest(".banner-drag-handle");
-    if (!handle) {
-      isBannerHandleArmed = false;
-      dragArmedBannerRow = null;
-      return;
-    }
-
-    const row = handle.closest("tr.banner-row");
-    if (!row) {
-      return;
-    }
-
-    isBannerHandleArmed = true;
-    dragArmedBannerRow = row;
-    row.setAttribute("draggable", "true");
+  bannerSortDrake = dragula([tbody], {
+    moves: function (_el, _container, handle) {
+      return !!(handle && handle.closest(".dragula-handle"));
+    },
   });
 
-  document.addEventListener("mouseup", function () {
-    if (draggedBannerRow) {
-      return;
-    }
-    cleanupBannerDragState();
+  bannerSortDrake.on("drag", function (el) {
+    el.classList.add("banner-row-dragging");
   });
 
-  zones.forEach((zone) => {
-    zone.addEventListener("dragstart", function (event) {
-      const row = event.target.closest("tr.banner-row");
-      if (!row || !isBannerHandleArmed || row !== dragArmedBannerRow) {
-        event.preventDefault();
-        return;
-      }
-
-      draggedBannerRow = row;
-      row.classList.add("banner-row-dragging");
-
-      if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", row.dataset.bannerId || "");
-      }
-    });
-
-    zone.addEventListener("dragover", function (event) {
-      if (!draggedBannerRow) {
-        return;
-      }
-
-      event.preventDefault();
-      zone.classList.add("is-drag-over");
-
-      const afterElement = getBannerDropAfterElement(zone, event.clientY);
-      if (!afterElement) {
-        zone.appendChild(draggedBannerRow);
-      } else {
-        zone.insertBefore(draggedBannerRow, afterElement);
-      }
-    });
-
-    zone.addEventListener("dragleave", function (event) {
-      const relatedTarget = event.relatedTarget;
-      if (relatedTarget && zone.contains(relatedTarget)) {
-        return;
-      }
-      zone.classList.remove("is-drag-over");
-    });
-
-    zone.addEventListener("drop", function (event) {
-      if (!draggedBannerRow) {
-        return;
-      }
-
-      event.preventDefault();
-      const afterElement = getBannerDropAfterElement(zone, event.clientY);
-      if (!afterElement) {
-        zone.appendChild(draggedBannerRow);
-      } else {
-        zone.insertBefore(draggedBannerRow, afterElement);
-      }
-
-      zone.classList.remove("is-drag-over");
-      syncBannerContainerEmptyRows();
-    });
+  bannerSortDrake.on("dragend", function (el) {
+    el.classList.remove("banner-row-dragging");
   });
 
-  document.addEventListener("dragend", function () {
-    syncBannerContainerEmptyRows();
-    cleanupBannerDragState();
+  bannerSortDrake.on("drop", function () {
+    syncBannerEmptyRow();
+    saveBannerOrder();
   });
 
-  bannerDragBindingsInitialized = true;
+  bannerSortDrake.on("cancel", function () {
+    syncBannerEmptyRow();
+  });
 }
 
 function getCountingDownPreciousForm() {
@@ -526,17 +463,12 @@ function fillCountingDownModal(data) {
 }
 
 function renderBannerTable(data) {
-  const sourceTableBody = document.getElementById(BANNER_SOURCE_TBODY_ID);
-  const targetTableBody = document.getElementById(BANNER_TARGET_TBODY_ID);
-
-  if (!sourceTableBody) {
+  const tableBody = document.getElementById(BANNER_TBODY_ID);
+  if (!tableBody) {
     return;
   }
 
-  sourceTableBody.innerHTML = "";
-  if (targetTableBody) {
-    targetTableBody.innerHTML = "";
-  }
+  tableBody.innerHTML = "";
 
   data.forEach((item) => {
     const pictureUrl = toDisplayText(item.picurl, "");
@@ -566,7 +498,7 @@ function renderBannerTable(data) {
     row.innerHTML = `
       <td class="text-muted align-middle">
         <span
-          class="banner-drag-handle d-inline-flex align-items-center justify-content-center fs-18 p-1"
+          class="dragula-handle d-inline-flex align-items-center justify-content-center fs-18 p-1"
           data-bs-toggle="tooltip"
           data-bs-trigger="hover"
           data-bs-title="Drag by handle"
@@ -598,15 +530,12 @@ function renderBannerTable(data) {
       </td>
     `;
 
-    sourceTableBody.appendChild(row);
+    tableBody.appendChild(row);
   });
 
 
-  syncBannerContainerEmptyRows();
-  initTooltipsIn(sourceTableBody);
-  if (targetTableBody) {
-    initTooltipsIn(targetTableBody);
-  }
+  syncBannerEmptyRow();
+  initTooltipsIn(tableBody);
   initBannerDragAndDrop();
 }
 
