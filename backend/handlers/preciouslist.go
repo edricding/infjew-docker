@@ -56,6 +56,12 @@ type preciousItemPayload struct {
 	PicURL   string `json:"picurl"`
 }
 
+type preciousInfoUpdatePayload struct {
+	PreciousID       int           `json:"precious_id"`
+	PreciousPictures []string      `json:"precious_pictures"`
+	PreciousDesc     interface{}   `json:"precious_desc"`
+}
+
 func (p preciousItemPayload) normalizedType() string {
 	if t := strings.TrimSpace(p.Type); t != "" {
 		return t
@@ -356,6 +362,18 @@ func validateCreatePayload(payload preciousItemPayload) (preciousItemPayload, er
 	return payload, nil
 }
 
+func normalizePictureURLs(pictures []string) []string {
+	normalized := make([]string, 0, len(pictures))
+	for _, picture := range pictures {
+		trimmed := strings.TrimSpace(picture)
+		if trimmed == "" {
+			continue
+		}
+		normalized = append(normalized, trimmed)
+	}
+	return normalized
+}
+
 // GetPreciousInfoHandler returns one preciousInfo row by precious_id.
 func GetPreciousInfoHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -396,6 +414,119 @@ func GetPreciousInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
+		"data":    item,
+	})
+}
+
+// UpdatePreciousInfoHandler updates preciousInfo by precious_id.
+func UpdatePreciousInfoHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
+			"success": false,
+			"message": "Method Not Allowed",
+		})
+		return
+	}
+
+	var payload preciousInfoUpdatePayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		log.Printf("failed to decode preciousInfo update request: %v", err)
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Invalid request body",
+		})
+		return
+	}
+
+	if payload.PreciousID <= 0 {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Invalid precious_id",
+		})
+		return
+	}
+
+	payload.PreciousPictures = normalizePictureURLs(payload.PreciousPictures)
+	if len(payload.PreciousPictures) == 0 {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "At least one picture URL is required",
+		})
+		return
+	}
+
+	picturesJSON, err := json.Marshal(payload.PreciousPictures)
+	if err != nil {
+		log.Printf("failed to encode precious pictures json: %v", err)
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Invalid precious_pictures",
+		})
+		return
+	}
+
+	descJSON := []byte("null")
+	if payload.PreciousDesc != nil {
+		descJSON, err = json.Marshal(payload.PreciousDesc)
+		if err != nil {
+			log.Printf("failed to encode precious desc json: %v", err)
+			writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"success": false,
+				"message": "Invalid precious_desc",
+			})
+			return
+		}
+	}
+
+	result, err := db.DB.Exec(`
+		UPDATE preciousInfo
+		SET precious_pictures = ?, precious_desc = ?
+		WHERE precious_id = ?
+	`,
+		string(picturesJSON),
+		string(descJSON),
+		payload.PreciousID,
+	)
+	if err != nil {
+		log.Printf("failed to update preciousInfo: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Update failed",
+		})
+		return
+	}
+
+	affectedRows, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("failed to get affected rows for preciousInfo update: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Update failed",
+		})
+		return
+	}
+
+	if affectedRows == 0 {
+		writeJSON(w, http.StatusNotFound, map[string]interface{}{
+			"success": false,
+			"message": "Precious info not found",
+		})
+		return
+	}
+
+	item, err := loadPreciousInfoByPreciousID(payload.PreciousID)
+	if err != nil {
+		log.Printf("failed to reload preciousInfo after update: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Updated but failed to reload precious info",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"message": "Updated successfully",
 		"data":    item,
 	})
 }

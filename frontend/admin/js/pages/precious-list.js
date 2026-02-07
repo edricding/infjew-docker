@@ -52,6 +52,66 @@ function initializePreciousInfoEditor() {
   });
 }
 
+function getPreciousPictureListContainer() {
+  return document.getElementById("precious-info-picture-list");
+}
+
+function createPreciousPictureRow(value = "", canRemove = false) {
+  const row = document.createElement("div");
+  row.className = "d-flex align-items-center gap-2 mb-2 precious-info-picture-row";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "form-control precious-info-picture-url";
+  input.value = value;
+  row.appendChild(input);
+
+  if (canRemove) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn btn-soft-primary btn-icon precious-info-remove-picture-btn";
+    button.innerHTML = '<i class="ti ti-minus fs-20"></i>';
+    row.appendChild(button);
+  }
+
+  return row;
+}
+
+function renderPreciousPictureRows(urls) {
+  const container = getPreciousPictureListContainer();
+  if (!container) {
+    return;
+  }
+
+  const list = Array.isArray(urls) ? urls.filter((url) => String(url || "").trim() !== "") : [];
+  const normalized = list.length > 0 ? list : [""];
+
+  container.innerHTML = "";
+  normalized.forEach((url, index) => {
+    container.appendChild(createPreciousPictureRow(url, index > 0));
+  });
+}
+
+function addPreciousPictureRow(value = "") {
+  const container = getPreciousPictureListContainer();
+  if (!container) {
+    return;
+  }
+
+  container.appendChild(createPreciousPictureRow(value, true));
+}
+
+function collectPreciousPictureUrls() {
+  const container = getPreciousPictureListContainer();
+  if (!container) {
+    return [];
+  }
+
+  return Array.from(container.querySelectorAll(".precious-info-picture-url"))
+    .map((input) => input.value.trim())
+    .filter((url) => url !== "");
+}
+
 function setPreciousInfoDescValue(desc) {
   initializePreciousInfoEditor();
   if (!preciousInfoQuill) {
@@ -87,7 +147,7 @@ function fillPreciousInfoModalFromList(result) {
   document.getElementById("precious-info-price").value = result[PRECIOUS_INDEX.PRICE] ?? "";
   document.getElementById("precious-info-type").value = result[PRECIOUS_INDEX.TYPE] ?? "";
   document.getElementById("precious-info-tag").value = result[PRECIOUS_INDEX.TAG] ?? "";
-  document.getElementById("precious-info-picture-url").value = result[PRECIOUS_INDEX.PIC_URL] ?? "";
+  renderPreciousPictureRows([result[PRECIOUS_INDEX.PIC_URL] ?? ""]);
   setPreciousInfoDescValue(null);
 }
 
@@ -107,7 +167,7 @@ function fillPreciousInfoModal(info) {
   document.getElementById("precious-info-price").value = officialPrice;
 
   const pictures = Array.isArray(info.precious_pictures) ? info.precious_pictures : [];
-  document.getElementById("precious-info-picture-url").value = pictures[0] || "";
+  renderPreciousPictureRows(pictures);
 
   setPreciousInfoDescValue(info.precious_desc);
 }
@@ -125,6 +185,17 @@ function fetchPreciousInfoByPreciousID(preciousID) {
       }
       return data.data;
     });
+}
+
+function updatePreciousInfo(payload) {
+  return fetch("/api/precious/info/update", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }).then((response) => response.json());
 }
 
 function initializePreciousMetaOptions() {
@@ -524,6 +595,87 @@ function addEventListenerAfterDOMLoaded() {
         console.error("Failed to fetch precious info", err);
       });
   });
+
+  const addPictureBtn = document.getElementById("precious-info-add-picture-btn");
+  if (addPictureBtn) {
+    addPictureBtn.addEventListener("click", () => {
+      addPreciousPictureRow("");
+    });
+  }
+
+  const pictureListContainer = getPreciousPictureListContainer();
+  if (pictureListContainer) {
+    pictureListContainer.addEventListener("click", (e) => {
+      const removeBtn = e.target.closest(".precious-info-remove-picture-btn");
+      if (!removeBtn) {
+        return;
+      }
+
+      const row = removeBtn.closest(".precious-info-picture-row");
+      if (!row) {
+        return;
+      }
+
+      row.remove();
+
+      const currentUrls = collectPreciousPictureUrls();
+      if (currentUrls.length === 0) {
+        renderPreciousPictureRows([""]);
+      }
+    });
+  }
+
+  const savePreciousInfoBtn = document.getElementById("save-precious-info-btn");
+  if (savePreciousInfoBtn) {
+    savePreciousInfoBtn.addEventListener("click", () => {
+      const preciousID = Number.parseInt(document.getElementById("precious-info-id").value, 10);
+      if (!Number.isInteger(preciousID) || preciousID <= 0) {
+        return;
+      }
+
+      const pictureUrls = collectPreciousPictureUrls();
+      if (pictureUrls.length === 0) {
+        Swal.fire({
+          title: "Picture Required",
+          text: "Please add at least one picture URL.",
+          icon: "warning",
+        });
+        return;
+      }
+
+      const descValue = preciousInfoQuill ? preciousInfoQuill.getContents() : null;
+      const payload = {
+        precious_id: preciousID,
+        precious_pictures: pictureUrls,
+        precious_desc: descValue,
+      };
+
+      updatePreciousInfo(payload)
+        .then((result) => {
+          if (!result || !result.success) {
+            throw new Error((result && result.message) || "Update failed");
+          }
+
+          fillPreciousInfoModal(result.data);
+
+          Swal.fire({
+            title: "Updated",
+            text: "Precious info has been saved.",
+            icon: "success",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+        })
+        .catch((error) => {
+          console.error("Update precious info failed", error);
+          Swal.fire({
+            title: "Update Failed",
+            text: "Please try again.",
+            icon: "error",
+          });
+        });
+    });
+  }
 
   document.getElementById("save-precious-btn").addEventListener("click", () => {
     const editPreciousData = {
