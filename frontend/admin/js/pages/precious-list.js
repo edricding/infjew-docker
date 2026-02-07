@@ -242,7 +242,7 @@ function renderPreciousList(data) {
       },
       {
         name: "Action",
-        width: "100px",
+        width: "150px",
         formatter: (e) =>
           gridjs.html(
             `<div class="hstack gap-2">
