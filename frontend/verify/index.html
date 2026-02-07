@@ -26,108 +26,9 @@
 
 <!-- Sweet Alert css-->
 <link href="../vendor/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
-<style>
-    body.verify-page .wrapper {
-        transform: perspective(1000px);
-        transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
-        transform-origin: 50% 0%;
-    }
-
-    body.verify-page .wrapper.verify-main-move {
-        transform: perspective(1000px) translate3d(0, 50vh, 0) rotate3d(1, 0, 0, 28deg);
-    }
-
-    .verify-search-overlay {
-        position: fixed;
-        z-index: 1100;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 50vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1.25rem;
-        background: rgba(20, 24, 33, 0.96);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.6s cubic-bezier(0.2, 1, 0.3, 1);
-    }
-
-    .verify-search-overlay.open {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .verify-search-close {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        width: 48px;
-        height: 48px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transform: scale3d(0.8, 0.8, 1);
-        transition: opacity 0.6s, transform 0.6s;
-        transition-timing-function: cubic-bezier(0.2, 1, 0.3, 1);
-    }
-
-    .verify-search-overlay.open .verify-search-close {
-        opacity: 1;
-        transform: scale3d(1, 1, 1);
-    }
-
-    .verify-search-form {
-        width: min(760px, 92vw);
-        text-align: center;
-        opacity: 0;
-        transform: scale3d(0.72, 0.72, 1);
-        transition: opacity 0.6s, transform 0.6s;
-        transition-timing-function: cubic-bezier(0.2, 1, 0.3, 1);
-    }
-
-    .verify-search-overlay.open .verify-search-form {
-        opacity: 1;
-        transform: scale3d(1, 1, 1);
-    }
-
-    .verify-search-input {
-        font-size: clamp(1.5rem, 5vw, 2.75rem);
-        font-weight: 600;
-        color: #ffffff;
-        background: transparent;
-        border: 0;
-        border-bottom: 3px solid rgba(255, 255, 255, 0.7);
-        border-radius: 0;
-        text-align: center;
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    .verify-search-input:focus {
-        color: #ffffff;
-        background: transparent;
-        border-color: #ffffff;
-        box-shadow: none;
-    }
-
-    .verify-search-input::placeholder {
-        color: rgba(255, 255, 255, 0.45);
-    }
-
-    .verify-search-info {
-        display: block;
-        margin-top: 0.75rem;
-        color: rgba(255, 255, 255, 0.78);
-        font-size: 0.95rem;
-        letter-spacing: 0.02em;
-    }
-</style>
 </head>
 
-<body class="verify-page">
+<body>
     <!-- Begin page -->
     <div class="wrapper">
 
@@ -174,14 +75,14 @@
 
                    
                         <div class="topbar-item d-none d-sm-flex">
-                            <button class="topbar-link btn btn-outline-primary btn-icon" type="button" id="btn-open-tag-search" aria-label="Open tag search">
+                            <button class="topbar-link btn btn-outline-primary btn-icon" type="button">
                                 <i class="ti ti-tag fs-22"></i>
                             </button>
                         </div>
 
                      
                         <div class="topbar-item d-none d-sm-flex">
-                            <button class="topbar-link btn btn-outline-primary btn-icon" type="button" id="btn-open-receipt-search" aria-label="Open receipt search">
+                            <button class="topbar-link btn btn-outline-primary btn-icon" type="button">
                                 <i class="ti ti-receipt fs-22"></i>
                             </button>
                         </div>
@@ -604,102 +505,20 @@
 
 
 
-  </div>
-  <!-- END wrapper -->
+    </div>
+    <!-- END wrapper -->
 
-  <div class="verify-search-overlay" id="verify-search-overlay" aria-hidden="true">
-    <button type="button" class="verify-search-close btn btn-outline-light btn-icon" id="verify-search-close" aria-label="Close search">
-      <i class="ti ti-x fs-24"></i>
-    </button>
-    <form class="verify-search-form" id="verify-search-form">
-      <input
-        id="verify-search-input"
-        class="verify-search-input form-control form-control-lg"
-        name="verify_search"
-        type="search"
-        placeholder="Enter code"
-        autocomplete="off"
-        autocorrect="off"
-        autocapitalize="off"
-        spellcheck="false"
-      />
-      <span class="verify-search-info" id="verify-search-info">Hit Enter to search or ESC to close</span>
-    </form>
-  </div>
-
-  <!-- Vendor js -->
-  <script src="/js/vendor.min.js"></script>
+    <!-- Vendor js -->
+    <script src="/js/vendor.min.js"></script>
 
     <!-- App js -->
     <script src="/js/app.js"></script>
 
-  <!-- Sweet Alerts js -->
-  <script src="/vendor/sweetalert2/sweetalert2.min.js"></script>
+    <!-- Sweet Alerts js -->
+    <script src="/vendor/sweetalert2/sweetalert2.min.js"></script>
 
-  <script>
-    (function () {
-      const wrapper = document.querySelector(".wrapper");
-      const overlay = document.getElementById("verify-search-overlay");
-      const closeBtn = document.getElementById("verify-search-close");
-      const form = document.getElementById("verify-search-form");
-      const input = document.getElementById("verify-search-input");
-      const info = document.getElementById("verify-search-info");
-      const tagBtn = document.getElementById("btn-open-tag-search");
-      const receiptBtn = document.getElementById("btn-open-receipt-search");
 
-      if (!wrapper || !overlay || !closeBtn || !form || !input || !info || !tagBtn || !receiptBtn) {
-        return;
-      }
 
-      function openSearch(mode) {
-        const isTag = mode === "tag";
-        input.placeholder = isTag ? "Enter tag code" : "Enter receipt number";
-        info.textContent = isTag
-          ? "Hit Enter to search tag or ESC to close"
-          : "Hit Enter to search receipt or ESC to close";
-
-        wrapper.classList.add("verify-main-move");
-        overlay.classList.add("open");
-        overlay.setAttribute("aria-hidden", "false");
-        window.requestAnimationFrame(() => input.focus());
-      }
-
-      function closeSearch() {
-        wrapper.classList.remove("verify-main-move");
-        overlay.classList.remove("open");
-        overlay.setAttribute("aria-hidden", "true");
-        input.blur();
-      }
-
-      tagBtn.addEventListener("click", function () {
-        openSearch("tag");
-      });
-
-      receiptBtn.addEventListener("click", function () {
-        openSearch("receipt");
-      });
-
-      closeBtn.addEventListener("click", closeSearch);
-
-      overlay.addEventListener("click", function (event) {
-        if (event.target === overlay) {
-          closeSearch();
-        }
-      });
-
-      document.addEventListener("keyup", function (event) {
-        if (event.key === "Escape") {
-          closeSearch();
-        }
-      });
-
-      form.addEventListener("submit", function (event) {
-        event.preventDefault();
-      });
-    })();
-  </script>
-
-  
 </body>
 
 </html>
