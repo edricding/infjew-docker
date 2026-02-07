@@ -253,6 +253,16 @@ function categorizeProductsByTag(products) {
   return categorized;
 }
 
+function normalizeRatingValue(rawRating) {
+  const numericRating = Number(rawRating);
+  if (!Number.isFinite(numericRating)) {
+    return 0;
+  }
+
+  const clampedRating = Math.min(5, Math.max(0, numericRating));
+  return Math.round(clampedRating * 2) / 2;
+}
+
 function createProductCard(product) {
   const col = document.createElement("div");
   col.classList.add("col-xl-3", "col-lg-4", "col-md-6", "col-12");
@@ -317,14 +327,23 @@ function createProductCard(product) {
 
   const rating = document.createElement("div");
   rating.classList.add("product-rating");
+
+  const normalizedRating = normalizeRatingValue(product.rating);
   for (let i = 0; i < 5; i++) {
     const star = document.createElement("i");
-    star.classList.add("las", "la-star");
-    if (i >= product.rating) {
-      star.classList.add("inactive");
+    const remaining = normalizedRating - i;
+
+    if (remaining >= 1) {
+      star.classList.add("las", "la-star");
+    } else if (remaining >= 0.5) {
+      star.classList.add("las", "la-star-half-alt");
+    } else {
+      star.classList.add("lar", "la-star");
     }
+
     rating.appendChild(star);
   }
+
   content.appendChild(rating);
 
   const price = document.createElement("div");
