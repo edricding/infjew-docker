@@ -1,3 +1,8 @@
+.verify-scroll-locked,
+body.verify-scroll-locked {
+  overflow: hidden;
+}
+
 .verify-search-panel {
   display: flex;
   flex-direction: column;

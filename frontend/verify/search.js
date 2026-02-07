@@ -9,6 +9,17 @@
   var openTagBtn = document.getElementById("go-verify-tag-btn");
   var openOrderBtn = document.getElementById("go-verify-order-btn");
   var closeBtn = document.getElementById("verify-search-close-btn");
+  var root = document.documentElement;
+  var body = document.body;
+
+  function setScrollLock(isLocked) {
+    if (!root || !body) {
+      return;
+    }
+
+    root.classList.toggle("verify-scroll-locked", isLocked);
+    body.classList.toggle("verify-scroll-locked", isLocked);
+  }
 
   function setSearchMode(mode) {
     if (!input || !info) {
@@ -33,6 +44,7 @@
     setSearchMode(mode);
     stage.classList.add("is-shifted");
     panel.classList.add("is-open");
+    setScrollLock(true);
     input.focus();
   }
 
@@ -43,6 +55,7 @@
 
     stage.classList.remove("is-shifted");
     panel.classList.remove("is-open");
+    setScrollLock(false);
     input.blur();
     input.value = "";
   }
