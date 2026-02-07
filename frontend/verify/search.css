@@ -133,8 +133,9 @@ body.verify-scroll-locked {
   left: 0;
   width: 100%;
   height: 100%;
-  transform: translate3d(0, 100vh, 0);
+  transform: translate3d(0, 0, 0);
   pointer-events: none;
+  opacity: 0;
 }
 
 .verify-card-stack__sheet:nth-child(1) {
@@ -157,6 +158,10 @@ body.verify-scroll-locked {
 
 .verify-card-stack.is-shifted {
   pointer-events: none;
+}
+
+.verify-card-stack.is-shifted .verify-card-stack__sheet--dummy {
+  opacity: 1;
 }
 
 .verify-card-stack.is-shifted .verify-card-stack__sheet:nth-child(1) {
