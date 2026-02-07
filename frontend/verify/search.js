@@ -32,6 +32,27 @@
     element.classList.toggle("d-none", !isVisible);
   }
 
+  function getDefaultInfo(mode) {
+    if (mode === "tag") {
+      return "Hit enter to search tag code or ESC to close";
+    }
+    return "Hit enter to search order code or ESC to close";
+  }
+
+  function getActiveInfo() {
+    return currentMode === "tag" ? infoTag : infoOrder;
+  }
+
+  function setInfoMessage(message, isError) {
+    var infoElement = getActiveInfo();
+    if (!infoElement) {
+      return;
+    }
+
+    infoElement.textContent = message;
+    infoElement.classList.toggle("text-danger", !!isError);
+  }
+
   function setSearchMode(mode) {
     currentMode = mode === "order" ? "order" : "tag";
     var isTagMode = currentMode === "tag";
@@ -40,6 +61,15 @@
     toggleVisible(infoTag, isTagMode);
     toggleVisible(inputOrder, !isTagMode);
     toggleVisible(infoOrder, !isTagMode);
+
+    if (infoTag) {
+      infoTag.classList.remove("text-danger");
+      infoTag.textContent = getDefaultInfo("tag");
+    }
+    if (infoOrder) {
+      infoOrder.classList.remove("text-danger");
+      infoOrder.textContent = getDefaultInfo("order");
+    }
   }
 
   function getActiveInput() {
@@ -81,6 +111,43 @@
     }
   }
 
+  function searchByTagCode() {
+    if (!inputTag) {
+      return;
+    }
+
+    var tagCode = inputTag.value.trim();
+    if (tagCode === "") {
+      setInfoMessage("Please enter a tag code.", true);
+      return;
+    }
+
+    setInfoMessage("Searching...", false);
+
+    fetch("/api/public/verify/tag?precious_code=" + encodeURIComponent(tagCode), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then(function (response) {
+        return response.json().then(function (result) {
+          if (!response.ok || !result || !result.success) {
+            var message = (result && result.message) || "Search failed";
+            throw new Error(message);
+          }
+          return result.data;
+        });
+      })
+      .then(function (data) {
+        console.log("verify tag search result:", data);
+        closeSearch();
+      })
+      .catch(function (error) {
+        console.error("verify tag search failed:", error);
+        setInfoMessage(error.message || "Search failed", true);
+      });
+  }
+
   function bindEvents() {
     setSearchMode("tag");
 
@@ -111,6 +178,13 @@
     if (form) {
       form.addEventListener("submit", function (event) {
         event.preventDefault();
+
+        if (currentMode === "tag") {
+          searchByTagCode();
+          return;
+        }
+
+        setInfoMessage("Order search is not ready yet.", true);
       });
     }
 

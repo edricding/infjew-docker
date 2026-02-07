@@ -274,6 +274,76 @@ func loadPreciousInfoByPreciousID(preciousID int) (*PreciousInfoItem, error) {
 	return &item, nil
 }
 
+func loadPreciousInfoByPreciousCode(preciousCode string) (*PreciousInfoItem, error) {
+	row := db.DB.QueryRow(`
+		SELECT
+			id,
+			precious_id,
+			precious_code,
+			precious_name,
+			precious_pictures,
+			precious_materials,
+			precious_type,
+			precious_tag,
+			precious_desc,
+			precious_official_price,
+			precious_info_filled
+		FROM preciousInfo
+		WHERE precious_code = ?
+		LIMIT 1
+	`, preciousCode)
+
+	var item PreciousInfoItem
+	var code, name, materials, preciousType, tag sql.NullString
+	var picturesRaw, descRaw []byte
+	var officialPrice sql.NullFloat64
+
+	if err := row.Scan(
+		&item.ID,
+		&item.PreciousID,
+		&code,
+		&name,
+		&picturesRaw,
+		&materials,
+		&preciousType,
+		&tag,
+		&descRaw,
+		&officialPrice,
+		&item.PreciousInfoFilled,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if code.Valid {
+		item.PreciousCode = strings.TrimSpace(code.String)
+	}
+	if name.Valid {
+		item.PreciousName = strings.TrimSpace(name.String)
+	}
+	if materials.Valid {
+		item.PreciousMaterials = strings.TrimSpace(materials.String)
+	}
+	if preciousType.Valid {
+		item.PreciousType = strings.TrimSpace(preciousType.String)
+	}
+	if tag.Valid {
+		item.PreciousTag = strings.TrimSpace(tag.String)
+	}
+
+	item.PreciousPictures = parseJSONPictures(picturesRaw)
+	item.PreciousDesc = parseJSONValue(descRaw)
+
+	if officialPrice.Valid {
+		price := officialPrice.Float64
+		item.PreciousOfficialPrice = &price
+	}
+
+	return &item, nil
+}
+
 func loadStringList(query string) ([]string, error) {
 	rows, err := db.DB.Query(query)
 	if err != nil {
@@ -413,6 +483,49 @@ func GetPreciousInfoHandler(w http.ResponseWriter, r *http.Request) {
 	item, err := loadPreciousInfoByPreciousID(preciousID)
 	if err != nil {
 		log.Printf("failed to query preciousInfo by precious_id=%d: %v", preciousID, err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Database query failed",
+		})
+		return
+	}
+
+	if item == nil {
+		writeJSON(w, http.StatusNotFound, map[string]interface{}{
+			"success": false,
+			"message": "Precious info not found",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"data":    item,
+	})
+}
+
+// GetPreciousInfoByCodeHandler returns one preciousInfo row by precious_code.
+func GetPreciousInfoByCodeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
+			"success": false,
+			"message": "Method Not Allowed",
+		})
+		return
+	}
+
+	preciousCode := strings.TrimSpace(r.URL.Query().Get("precious_code"))
+	if preciousCode == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Invalid precious_code",
+		})
+		return
+	}
+
+	item, err := loadPreciousInfoByPreciousCode(preciousCode)
+	if err != nil {
+		log.Printf("failed to query preciousInfo by precious_code=%s: %v", preciousCode, err)
 		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
 			"message": "Database query failed",
