@@ -29,8 +29,21 @@
 </head>
 
 <body>
+
+    <div class="search" id="verify-search-section">
+        <button id="btn-search-close" class="btn btn--search-close" aria-label="Close search form"><svg
+                class="icon icon--cross">
+                <use xlink:href="#icon-cross"></use>
+            </svg></button>
+        <form class="search__form" action="">
+            <input class="search__input" name="search" type="search" placeholder="Search" autocomplete="off"
+                autocorrect="off" autocapitalize="off" spellcheck="false" id="verify-search-input"/>
+            <span class="search__info">Hit enter to search or ESC to close</span>
+        </form>
+    </div><!-- /search -->
+
     <!-- Begin page -->
-    <div class="wrapper">
+    <div class="wrapper" id="verify-main-section">
 
 
         <!-- Topbar Start -->
@@ -70,19 +83,19 @@
                         <h4 class="fs-18 text-uppercase fw-bold mb-0">Verify Details</h4>
                     </div>
 
-                     <div class="d-flex flex-grow-1 align-items-center gap-2">
+                    <div class="d-flex flex-grow-1 align-items-center gap-2">
 
 
-                   
+
                         <div class="topbar-item d-none d-sm-flex">
-                            <button class="topbar-link btn btn-outline-primary btn-icon" type="button">
+                            <button class="topbar-link btn btn-outline-primary btn-icon" type="button" id="go-verify-tag-btn">
                                 <i class="ti ti-tag fs-22"></i>
                             </button>
                         </div>
 
-                     
+
                         <div class="topbar-item d-none d-sm-flex">
-                            <button class="topbar-link btn btn-outline-primary btn-icon" type="button">
+                            <button class="topbar-link btn btn-outline-primary btn-icon" type="button" id="go-verify-order-btn">
                                 <i class="ti ti-receipt fs-22"></i>
                             </button>
                         </div>
@@ -463,7 +476,7 @@
                             </div>
                         </div>
                     </div>
-                
+
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 text-end mb-3">
@@ -516,6 +529,8 @@
 
     <!-- Sweet Alerts js -->
     <script src="/vendor/sweetalert2/sweetalert2.min.js"></script>
+
+    <script src="search.js"></script>
 
 
 
