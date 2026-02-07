@@ -422,26 +422,32 @@ function renderPreciousList(data) {
       {
         name: "Action",
         width: "150px",
-        formatter: (e) =>
-          gridjs.html(
+        formatter: (e) => {
+          const actionData = e && typeof e === "object" ? e : { id: e, precious_info_filled: 0 };
+          const infoFilled = Number(actionData.precious_info_filled) === 1;
+          const infoButtonClass = infoFilled ? "btn-soft-success" : "btn-soft-warning";
+          const safeID = escapeHtmlAttr(actionData.id);
+
+          return gridjs.html(
             `<div class="hstack gap-2">
               <a data-bs-toggle="modal" data-bs-target="#EditPreciousModal"
-                 data-id="${e}"
+                 data-id="${safeID}"
                  class="btn btn-soft-primary btn-icon btn-sm rounded-circle table-edit-precious-btn">
                 <i class="ti ti-edit fs-16"></i>
               </a>
               <a data-bs-toggle="modal" data-bs-target="#EditPreciousInfoModal"
-                 data-id="${e}"
-                 class="btn btn-soft-success btn-icon btn-sm rounded-circle table-edit-precious-info-btn">
+                 data-id="${safeID}"
+                 class="btn ${infoButtonClass} btn-icon btn-sm rounded-circle table-edit-precious-info-btn">
                 <i class="ti ti-id fs-16"></i>
               </a>
               <a href="javascript:void(0);"
                  class="btn btn-soft-danger btn-icon btn-sm rounded-circle sweet-delete-btn"
-                 data-id="${e}">
+                 data-id="${safeID}">
                 <i class="ti ti-trash"></i>
               </a>
             </div>`
-          ),
+          );
+        },
       },
     ],
     pagination: { limit: 10 },
@@ -800,7 +806,10 @@ function formatPreciousListData(data) {
     item.status,
     item.url,
     item.picurl,
-    item.id,
+    {
+      id: item.id,
+      precious_info_filled: item.precious_info_filled,
+    },
   ]);
 }
 

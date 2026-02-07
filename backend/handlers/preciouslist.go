@@ -14,17 +14,18 @@ import (
 )
 
 type PreciousItem struct {
-	ID       int    `json:"id"`
-	ItemID   string `json:"itemid"`
-	Title    string `json:"title"`
-	Tag      string `json:"tag"`
-	Type     string `json:"type"`
-	Price    int    `json:"price"`
-	Discount int    `json:"discount"`
-	Rating   float64 `json:"rating"`
-	Status   int    `json:"status"`
-	URL      string `json:"url"`
-	PicURL   string `json:"picurl"`
+	ID                int     `json:"id"`
+	ItemID            string  `json:"itemid"`
+	Title             string  `json:"title"`
+	Tag               string  `json:"tag"`
+	Type              string  `json:"type"`
+	Price             int     `json:"price"`
+	Discount          int     `json:"discount"`
+	Rating            float64 `json:"rating"`
+	Status            int     `json:"status"`
+	URL               string  `json:"url"`
+	PicURL            string  `json:"picurl"`
+	PreciousInfoFilled int    `json:"precious_info_filled"`
 }
 
 type PreciousInfoItem struct {
@@ -116,8 +117,21 @@ func writeJSON(w http.ResponseWriter, statusCode int, payload map[string]interfa
 
 func loadPreciousItems() ([]PreciousItem, error) {
 	rows, err := db.DB.Query(`
-		SELECT id, itemid, title, tag, type, price, discount, rating, status, url, picurl
-		FROM preciousList
+		SELECT
+			p.id,
+			p.itemid,
+			p.title,
+			p.tag,
+			p.type,
+			p.price,
+			p.discount,
+			p.rating,
+			p.status,
+			p.url,
+			p.picurl,
+			COALESCE(pi.precious_info_filled, 0) AS precious_info_filled
+		FROM preciousList p
+		LEFT JOIN preciousInfo pi ON pi.precious_id = p.id
 	`)
 	if err != nil {
 		return nil, err
@@ -139,6 +153,7 @@ func loadPreciousItems() ([]PreciousItem, error) {
 			&item.Status,
 			&item.URL,
 			&item.PicURL,
+			&item.PreciousInfoFilled,
 		); err != nil {
 			return nil, err
 		}
