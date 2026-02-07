@@ -248,8 +248,13 @@ function renderPreciousList(data) {
             `<div class="hstack gap-2">
               <a data-bs-toggle="modal" data-bs-target="#EditPreciousModal"
                  data-id="${e}"
-                 class="btn btn-soft-success btn-icon btn-sm rounded-circle table-edit-precious-btn">
+                 class="btn btn-soft-primary btn-icon btn-sm rounded-circle table-edit-precious-btn">
                 <i class="ti ti-edit fs-16"></i>
+              </a>
+              <a data-bs-toggle="modal" data-bs-target="#EditPreciousInfoModal"
+                 data-id="${e}"
+                 class="btn btn-soft-success btn-icon btn-sm rounded-circle table-edit-precious-info-btn">
+                <i class="ti ti-id fs-16"></i>
               </a>
               <a href="javascript:void(0);"
                  class="btn btn-soft-danger btn-icon btn-sm rounded-circle sweet-delete-btn"
