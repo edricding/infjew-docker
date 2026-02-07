@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-layout="topnav">
+<head>
 
 <meta charset="utf-8" />
 <title>VERIFY | INFJEW | 100% HANDCRAFT Precious</title>
@@ -14,6 +15,9 @@
 
 <!-- Theme Config Js -->
 <script src="../js/config.js"></script>
+<script>
+    document.documentElement.classList.add("js");
+</script>
 
 <!-- Vendor css -->
 <link href="../css/vendor.min.css" rel="stylesheet" type="text/css" />
@@ -33,10 +37,9 @@
 <body>
 
     <div class="search" id="verify-search-section">
-        <button id="btn-search-close" class="btn btn--search-close" aria-label="Close search form"><svg
-                class="icon icon--cross">
-                <use xlink:href="#icon-cross"></use>
-            </svg></button>
+        <button id="btn-search-close" class="btn btn--search-close" aria-label="Close search form">
+            <i class="ti ti-x fs-30"></i>
+        </button>
         <form class="search__form" action="">
             <input class="search__input" name="search" type="search" placeholder="Search" autocomplete="off"
                 autocorrect="off" autocapitalize="off" spellcheck="false" id="verify-search-input"/>
@@ -45,7 +48,7 @@
     </div><!-- /search -->
 
     <!-- Begin page -->
-    <div class="wrapper" id="verify-main-section">
+    <div class="wrapper main-wrap" id="verify-main-section">
 
 
         <!-- Topbar Start -->
@@ -496,7 +499,7 @@
                             <script>
                                 document.write(new Date().getFullYear());
                             </script>
-                            © INFJEW. All rights reserved.
+                            &copy; INFJEW. All rights reserved.
                         </div>
 
 
