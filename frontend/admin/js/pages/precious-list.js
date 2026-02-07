@@ -40,12 +40,12 @@ function initializePreciousInfoEditor() {
         [{ font: [] }, { size: [] }],
         ["bold", "italic", "underline", "strike"],
         [{ color: [] }, { background: [] }],
-        [{ header: [false, 1, 2, 3, 4, 5, 6] }, "blockquote", "code-block"],
+        ["blockquote", "code-block"],
         [
           { list: "ordered" },
           { list: "bullet" },
         ],
-        ["direction", { align: [] }],
+        [{ align: [] }],
         ["clean"],
       ],
     },
@@ -147,6 +147,7 @@ function fillPreciousInfoModalFromList(result) {
   document.getElementById("precious-info-price").value = result[PRECIOUS_INDEX.PRICE] ?? "";
   document.getElementById("precious-info-type").value = result[PRECIOUS_INDEX.TYPE] ?? "";
   document.getElementById("precious-info-tag").value = result[PRECIOUS_INDEX.TAG] ?? "";
+  document.getElementById("precious-info-materials").value = "";
   renderPreciousPictureRows([result[PRECIOUS_INDEX.PIC_URL] ?? ""]);
   setPreciousInfoDescValue(null);
 }
@@ -161,6 +162,7 @@ function fillPreciousInfoModal(info) {
   document.getElementById("precious-info-name").value = info.precious_name ?? "";
   document.getElementById("precious-info-type").value = info.precious_type ?? "";
   document.getElementById("precious-info-tag").value = info.precious_tag ?? "";
+  document.getElementById("precious-info-materials").value = info.precious_materials ?? "";
 
   const officialPrice =
     typeof info.precious_official_price === "number" ? info.precious_official_price : "";
@@ -644,8 +646,10 @@ function addEventListenerAfterDOMLoaded() {
       }
 
       const descValue = preciousInfoQuill ? preciousInfoQuill.getContents() : null;
+      const materialsValue = document.getElementById("precious-info-materials").value.trim();
       const payload = {
         precious_id: preciousID,
+        precious_materials: materialsValue,
         precious_pictures: pictureUrls,
         precious_desc: descValue,
       };
@@ -657,6 +661,12 @@ function addEventListenerAfterDOMLoaded() {
           }
 
           fillPreciousInfoModal(result.data);
+
+          const infoModalElement = document.getElementById("EditPreciousInfoModal");
+          const infoModalInstance = bootstrap.Modal.getInstance(infoModalElement);
+          if (infoModalInstance) {
+            infoModalInstance.hide();
+          }
 
           Swal.fire({
             title: "Updated",

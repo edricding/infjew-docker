@@ -58,6 +58,7 @@ type preciousItemPayload struct {
 
 type preciousInfoUpdatePayload struct {
 	PreciousID       int           `json:"precious_id"`
+	PreciousMaterials string       `json:"precious_materials"`
 	PreciousPictures []string      `json:"precious_pictures"`
 	PreciousDesc     interface{}   `json:"precious_desc"`
 }
@@ -446,6 +447,7 @@ func UpdatePreciousInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	payload.PreciousMaterials = strings.TrimSpace(payload.PreciousMaterials)
 	payload.PreciousPictures = normalizePictureURLs(payload.PreciousPictures)
 	if len(payload.PreciousPictures) == 0 {
 		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -480,9 +482,10 @@ func UpdatePreciousInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	result, err := db.DB.Exec(`
 		UPDATE preciousInfo
-		SET precious_pictures = ?, precious_desc = ?
+		SET precious_materials = ?, precious_pictures = ?, precious_desc = ?
 		WHERE precious_id = ?
 	`,
+		payload.PreciousMaterials,
 		string(picturesJSON),
 		string(descJSON),
 		payload.PreciousID,
