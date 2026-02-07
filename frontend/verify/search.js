@@ -14,6 +14,7 @@
   var root = document.documentElement;
   var body = document.body;
   var currentMode = "tag";
+  var isTagSearching = false;
 
   function setScrollLock(isLocked) {
     if (!root || !body) {
@@ -116,6 +117,10 @@
       return;
     }
 
+    if (isTagSearching) {
+      return;
+    }
+
     var tagCode = inputTag.value.trim();
     if (tagCode === "") {
       setInfoMessage("Please enter a tag code.", true);
@@ -123,6 +128,7 @@
     }
 
     setInfoMessage("Searching...", false);
+    isTagSearching = true;
 
     fetch("/api/public/verify/tag?precious_code=" + encodeURIComponent(tagCode), {
       method: "GET",
@@ -145,6 +151,9 @@
       .catch(function (error) {
         console.error("verify tag search failed:", error);
         setInfoMessage(error.message || "Search failed", true);
+      })
+      .finally(function () {
+        isTagSearching = false;
       });
   }
 
@@ -167,11 +176,6 @@
         event.preventDefault();
         handleSearchSubmit();
       }
-    });
-
-    inputElement.addEventListener("search", function (event) {
-      event.preventDefault();
-      handleSearchSubmit();
     });
   }
 
@@ -217,27 +221,6 @@
         closeSearch();
       }
     });
-
-    document.addEventListener(
-      "keydown",
-      function (event) {
-        if (event.key !== "Enter" && event.keyCode !== 13) {
-          return;
-        }
-        if (!panel || !panel.classList.contains("is-open")) {
-          return;
-        }
-
-        var active = document.activeElement;
-        if (active !== inputTag && active !== inputOrder) {
-          return;
-        }
-
-        event.preventDefault();
-        handleSearchSubmit();
-      },
-      true
-    );
   }
 
   bindEvents();
