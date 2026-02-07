@@ -65,8 +65,8 @@ body.verify-scroll-locked {
   line-height: 1;
   display: inline-block;
   box-sizing: border-box;
-  width: 75%;
-  max-width: 900px;
+  width: 100%;
+  max-width: 1200px;
   padding: 0 0 0.1em;
   color: #0f172a;
   background: transparent;
