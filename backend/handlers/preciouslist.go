@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math"
 	"net/http"
 	"strings"
 
@@ -19,7 +20,7 @@ type PreciousItem struct {
 	Type     string `json:"type"`
 	Price    int    `json:"price"`
 	Discount int    `json:"discount"`
-	Rating   int    `json:"rating"`
+	Rating   float64 `json:"rating"`
 	Status   int    `json:"status"`
 	URL      string `json:"url"`
 	PicURL   string `json:"picurl"`
@@ -34,7 +35,7 @@ type preciousItemPayload struct {
 	Precious string `json:"precious"` // Alias for "type"
 	Price    int    `json:"price"`
 	Discount int    `json:"discount"`
-	Rating   int    `json:"rating"`
+	Rating   float64 `json:"rating"`
 	Status   int    `json:"status"`
 	URL      string `json:"url"`
 	PicURL   string `json:"picurl"`
@@ -65,6 +66,24 @@ func (p preciousItemPayload) normalizedURL() string {
 
 func (p preciousItemPayload) normalizedPicURL() string {
 	return strings.TrimSpace(p.PicURL)
+}
+
+func normalizeHalfStepRating(rating float64) (float64, error) {
+	if math.IsNaN(rating) || math.IsInf(rating, 0) {
+		return 0, errors.New("invalid rating")
+	}
+
+	if rating < 0 || rating > 5 {
+		return 0, errors.New("rating out of range")
+	}
+
+	scaled := rating * 2
+	rounded := math.Round(scaled)
+	if math.Abs(scaled-rounded) > 1e-9 {
+		return 0, errors.New("rating must be in 0.5 steps")
+	}
+
+	return rounded / 2, nil
 }
 
 func writeJSON(w http.ResponseWriter, statusCode int, payload map[string]interface{}) {
@@ -206,6 +225,12 @@ func validateCreatePayload(payload preciousItemPayload) (preciousItemPayload, er
 		return payload, errors.New("missing required fields")
 	}
 
+	normalizedRating, err := normalizeHalfStepRating(payload.Rating)
+	if err != nil {
+		return payload, err
+	}
+	payload.Rating = normalizedRating
+
 	return payload, nil
 }
 
@@ -240,6 +265,12 @@ func validateUpdatePayload(payload preciousItemPayload) (preciousItemPayload, er
 	if payload.Type == "" {
 		return payload, errors.New("type is required")
 	}
+
+	normalizedRating, err := normalizeHalfStepRating(payload.Rating)
+	if err != nil {
+		return payload, err
+	}
+	payload.Rating = normalizedRating
 
 	return payload, nil
 }

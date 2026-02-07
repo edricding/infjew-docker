@@ -16,7 +16,7 @@ type CountingDown struct {
 	Price      int    `json:"price"`
 	Discount   int    `json:"discount"`
 	Percentage string `json:"percentage"`
-	Rating     int    `json:"rating"`
+	Rating     float64 `json:"rating"`
 	DDL        string `json:"ddl"`
 	URL        string `json:"url"`
 	PicURL     string `json:"picurl"`
@@ -28,7 +28,7 @@ type UpdateCountingDownData struct {
     Price      int    `json:"price"`
     Discount   int    `json:"discount"`
     Percentage string `json:"percentage"`
-    Rating     int    `json:"rating"`
+    Rating     float64 `json:"rating"`
     DDL        string `json:"ddl"`
     URL        string `json:"url"`
     PicURL     string `json:"picurl"`

@@ -286,7 +286,7 @@ function getCountingDownPreciousForm() {
       document.getElementById("edit-countingdown-discount").value.trim()
     ),
     percentage: `${percentageValue}%`,
-    rating: parseInt(
+    rating: parseFloat(
       document.getElementById("edit-countingdown-rating-select").value
     ),
     ddl: document.getElementById("edit-countingdown-ddl").value.trim(),
@@ -453,8 +453,9 @@ function fillCountingDownModal(data) {
   document.getElementById("edit-countingdown-price").value = data.price || "";
   document.getElementById("edit-countingdown-discount").value =
     data.discount || "";
+  const parsedRating = Number(data.rating);
   document.getElementById("edit-countingdown-rating-select").value =
-    data.rating || "1";
+    Number.isFinite(parsedRating) ? parsedRating.toFixed(1) : "1.0";
   document.getElementById("edit-countingdown-ddl").value = data.ddl || "";
   document.getElementById("edit-countingdown-precious-url").value =
     data.url || "";

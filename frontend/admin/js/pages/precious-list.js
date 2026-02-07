@@ -115,8 +115,10 @@ function fillEditForm(result) {
   ensureSelectHasValue("edit-precious-tag", result[PRECIOUS_INDEX.TAG]);
 
   const ratingSelect = document.getElementById("edit-rating-select");
+  const selectedRating = Number(result[PRECIOUS_INDEX.RATING]);
   for (let i = 0; i < ratingSelect.options.length; i += 1) {
-    if (parseInt(ratingSelect.options[i].value, 10) === result[PRECIOUS_INDEX.RATING]) {
+    const optionRating = Number.parseFloat(ratingSelect.options[i].value);
+    if (Math.abs(optionRating - selectedRating) < 0.001) {
       ratingSelect.selectedIndex = i;
       break;
     }
@@ -342,7 +344,7 @@ function addEventListenerAfterDOMLoaded() {
       discount: parseFloat(document.getElementById("add-precious-discount").value) || 0,
       type: document.getElementById("add-precious-type").value.trim(),
       tag: document.getElementById("add-precious-tag").value.trim(),
-      rating: parseInt(document.getElementById("add-rating-select").value, 10),
+      rating: parseFloat(document.getElementById("add-rating-select").value),
       url: document.getElementById("add-precious-url").value.trim(),
       picurl: document.getElementById("add-precious-picture-url").value.trim(),
     };
@@ -400,7 +402,7 @@ function addEventListenerAfterDOMLoaded() {
       discount: parseFloat(document.getElementById("edit-precious-discount").value) || 0,
       type: document.getElementById("edit-precious-type").value.trim(),
       tag: document.getElementById("edit-precious-tag").value.trim(),
-      rating: parseInt(document.getElementById("edit-rating-select").value, 10),
+      rating: parseFloat(document.getElementById("edit-rating-select").value),
       url: document.getElementById("edit-precious-url").value.trim(),
       picurl: document.getElementById("edit-precious-picture-url").value.trim(),
     };
