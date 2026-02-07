@@ -426,7 +426,20 @@ func CreatePreciousItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.DB.Exec(`
+	tx, err := db.DB.Begin()
+	if err != nil {
+		log.Printf("failed to start create transaction: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Create failed",
+		})
+		return
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	preciousListResult, err := tx.Exec(`
 		INSERT INTO preciousList (itemid, title, tag, type, price, discount, rating, status, url, picurl)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`,
@@ -442,7 +455,55 @@ func CreatePreciousItemHandler(w http.ResponseWriter, r *http.Request) {
 		payload.PicURL,
 	)
 	if err != nil {
-		log.Printf("failed to create precious item: %v", err)
+		log.Printf("failed to create preciousList item: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Create failed",
+		})
+		return
+	}
+
+	newPreciousID, err := preciousListResult.LastInsertId()
+	if err != nil {
+		log.Printf("failed to get inserted preciousList id: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Create failed",
+		})
+		return
+	}
+
+	_, err = tx.Exec(`
+		INSERT INTO preciousInfo (
+			precious_id,
+			precious_code,
+			precious_name,
+			precious_pictures,
+			precious_type,
+			precious_tag,
+			precious_official_price
+		)
+		VALUES (?, ?, ?, JSON_ARRAY(?), ?, ?, ?)
+	`,
+		newPreciousID,
+		payload.ItemID,
+		payload.Title,
+		payload.PicURL,
+		payload.Type,
+		payload.Tag,
+		payload.Price,
+	)
+	if err != nil {
+		log.Printf("failed to create preciousInfo item: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Create failed",
+		})
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Printf("failed to commit create transaction: %v", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
 			"message": "Create failed",
