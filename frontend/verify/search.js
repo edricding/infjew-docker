@@ -197,7 +197,7 @@
 
     function render() {
       inputElement.value = formatTemplateCode(raw, config);
-      inputElement.classList.toggle("text-muted", raw.length === 0);
+      inputElement.classList.toggle("text-muted-2", raw.length === 0);
       moveCursorTo(inputElement, getCursorFromRawLength(raw.length, config));
     }
 

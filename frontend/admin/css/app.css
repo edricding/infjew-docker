@@ -9707,6 +9707,11 @@ textarea.form-control-lg {
   color: var(--bs-secondary-color) !important;
 }
 
+.text-muted-2 {
+  --bs-text-opacity: 1;
+  color: #000000!important;
+}
+
 .text-black-50 {
   --bs-text-opacity: 1;
   color: rgba(0, 0, 0, 0.5) !important;
