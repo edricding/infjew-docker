@@ -1439,63 +1439,12 @@
   }
 
   function handleSearchSubmit() {
-    var searchType = currentMode === "tag" ? "tag" : "order";
-    var searchCode = "";
-
-    if (searchType === "tag") {
-      searchCode = getInputCode(inputTag, TAG_INPUT_CONFIG);
-      var tagRawLength = getInputRawLength(inputTag, TAG_INPUT_CONFIG);
-
-      if (!searchCode) {
-        if (tagRawLength === 0) {
-          setInfoMessage("Please enter a tag code.", true);
-        } else {
-          setInfoMessage("Invalid format. Use " + TAG_CODE_FORMAT + ".", true);
-        }
-        return;
-      }
-
-      if (!TAG_CODE_PATTERN.test(searchCode)) {
-        setInfoMessage("Invalid format. Use " + TAG_CODE_FORMAT + ".", true);
-        return;
-      }
-    } else {
-      searchCode = getInputCode(inputOrder, ORDER_INPUT_CONFIG);
-      var orderRawLength = getInputRawLength(inputOrder, ORDER_INPUT_CONFIG);
-
-      if (!searchCode) {
-        if (orderRawLength === 0) {
-          setInfoMessage("Please enter an order code.", true);
-        } else {
-          setInfoMessage("Invalid format. Use " + ORDER_CODE_FORMAT + ".", true);
-        }
-        return;
-      }
-
-      if (!ORDER_CODE_PATTERN.test(searchCode)) {
-        setInfoMessage("Invalid format. Use " + ORDER_CODE_FORMAT + ".", true);
-        return;
-      }
-    }
-
-    if (!window || !window.location) {
+    if (currentMode === "tag") {
+      searchByTagCode();
       return;
     }
 
-    var targetQuery =
-      "?search=" +
-      encodeURIComponent(searchType) +
-      "&value=" +
-      encodeURIComponent(searchCode);
-    var targetPath = window.location.pathname || "/";
-    var targetURL = targetPath + targetQuery;
-
-    if (window.location.search === targetQuery) {
-      window.location.reload();
-      return;
-    }
-
-    window.location.assign(targetURL);
+    searchByOrderCode();
   }
 
   function getSearchContextFromURL() {
