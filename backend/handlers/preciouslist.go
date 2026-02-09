@@ -39,6 +39,7 @@ type PreciousInfoItem struct {
 	PreciousTag          string      `json:"precious_tag"`
 	PreciousDesc         interface{} `json:"precious_desc"`
 	PreciousOfficialPrice *float64   `json:"precious_official_price"`
+	PreciousRating       *float64    `json:"precious_rating"`
 	PreciousInfoFilled   int         `json:"precious_info_filled"`
 }
 
@@ -207,26 +208,28 @@ func parseJSONValue(raw []byte) interface{} {
 func loadPreciousInfoByPreciousID(preciousID int) (*PreciousInfoItem, error) {
 	row := db.DB.QueryRow(`
 		SELECT
-			id,
-			precious_id,
-			precious_code,
-			precious_name,
-			precious_pictures,
-			precious_materials,
-			precious_type,
-			precious_tag,
-			precious_desc,
-			precious_official_price,
-			precious_info_filled
-		FROM preciousInfo
-		WHERE precious_id = ?
+			pi.id,
+			pi.precious_id,
+			pi.precious_code,
+			pi.precious_name,
+			pi.precious_pictures,
+			pi.precious_materials,
+			pi.precious_type,
+			pi.precious_tag,
+			pi.precious_desc,
+			pi.precious_official_price,
+			pi.precious_info_filled,
+			pl.rating
+		FROM preciousInfo pi
+		LEFT JOIN preciousList pl ON pl.id = pi.precious_id
+		WHERE pi.precious_id = ?
 		LIMIT 1
 	`, preciousID)
 
 	var item PreciousInfoItem
 	var code, name, materials, preciousType, tag sql.NullString
 	var picturesRaw, descRaw []byte
-	var officialPrice sql.NullFloat64
+	var officialPrice, preciousRating sql.NullFloat64
 
 	if err := row.Scan(
 		&item.ID,
@@ -240,6 +243,7 @@ func loadPreciousInfoByPreciousID(preciousID int) (*PreciousInfoItem, error) {
 		&descRaw,
 		&officialPrice,
 		&item.PreciousInfoFilled,
+		&preciousRating,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -269,6 +273,10 @@ func loadPreciousInfoByPreciousID(preciousID int) (*PreciousInfoItem, error) {
 	if officialPrice.Valid {
 		price := officialPrice.Float64
 		item.PreciousOfficialPrice = &price
+	}
+	if preciousRating.Valid {
+		rating := preciousRating.Float64
+		item.PreciousRating = &rating
 	}
 
 	return &item, nil
@@ -277,26 +285,28 @@ func loadPreciousInfoByPreciousID(preciousID int) (*PreciousInfoItem, error) {
 func loadPreciousInfoByPreciousCode(preciousCode string) (*PreciousInfoItem, error) {
 	row := db.DB.QueryRow(`
 		SELECT
-			id,
-			precious_id,
-			precious_code,
-			precious_name,
-			precious_pictures,
-			precious_materials,
-			precious_type,
-			precious_tag,
-			precious_desc,
-			precious_official_price,
-			precious_info_filled
-		FROM preciousInfo
-		WHERE precious_code = ?
+			pi.id,
+			pi.precious_id,
+			pi.precious_code,
+			pi.precious_name,
+			pi.precious_pictures,
+			pi.precious_materials,
+			pi.precious_type,
+			pi.precious_tag,
+			pi.precious_desc,
+			pi.precious_official_price,
+			pi.precious_info_filled,
+			pl.rating
+		FROM preciousInfo pi
+		LEFT JOIN preciousList pl ON pl.id = pi.precious_id
+		WHERE pi.precious_code = ?
 		LIMIT 1
 	`, preciousCode)
 
 	var item PreciousInfoItem
 	var code, name, materials, preciousType, tag sql.NullString
 	var picturesRaw, descRaw []byte
-	var officialPrice sql.NullFloat64
+	var officialPrice, preciousRating sql.NullFloat64
 
 	if err := row.Scan(
 		&item.ID,
@@ -310,6 +320,7 @@ func loadPreciousInfoByPreciousCode(preciousCode string) (*PreciousInfoItem, err
 		&descRaw,
 		&officialPrice,
 		&item.PreciousInfoFilled,
+		&preciousRating,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -339,6 +350,10 @@ func loadPreciousInfoByPreciousCode(preciousCode string) (*PreciousInfoItem, err
 	if officialPrice.Valid {
 		price := officialPrice.Float64
 		item.PreciousOfficialPrice = &price
+	}
+	if preciousRating.Valid {
+		rating := preciousRating.Float64
+		item.PreciousRating = &rating
 	}
 
 	return &item, nil

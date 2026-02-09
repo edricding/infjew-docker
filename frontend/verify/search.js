@@ -44,6 +44,9 @@
   var tagPrice = tagCardsArea
     ? tagCardsArea.querySelector("#verify-card-tag-precious-price")
     : null;
+  var tagRatingStars = tagCardsArea
+    ? tagCardsArea.querySelector("#verify-card-tag-rating-stars")
+    : null;
   var tagDesc = tagCardsArea
     ? tagCardsArea.querySelector("#verify-card-tag-precious-desc")
     : null;
@@ -529,6 +532,56 @@
     return "--";
   }
 
+  function normalizeRating(value) {
+    if (value == null || value === "") {
+      return null;
+    }
+
+    var parsed = Number(value);
+    if (!isFinite(parsed)) {
+      return null;
+    }
+
+    if (parsed < 0) {
+      parsed = 0;
+    } else if (parsed > 5) {
+      parsed = 5;
+    }
+
+    return Math.round(parsed * 2) / 2;
+  }
+
+  function renderTagRating(value) {
+    if (!tagRatingStars) {
+      return;
+    }
+
+    var rating = normalizeRating(value);
+    tagRatingStars.innerHTML = "";
+
+    if (rating == null) {
+      tagRatingStars.innerHTML = '<span class="text-muted fs-14">-</span>';
+      tagRatingStars.removeAttribute("aria-label");
+      return;
+    }
+
+    for (var i = 1; i <= 5; i += 1) {
+      var star = document.createElement("span");
+
+      if (rating >= i) {
+        star.className = "ti ti-star-filled text-warning";
+      } else if (rating >= i - 0.5) {
+        star.className = "ti ti-star-half-filled text-warning";
+      } else {
+        star.className = "ti ti-star text-warning";
+      }
+
+      tagRatingStars.appendChild(star);
+    }
+
+    tagRatingStars.setAttribute("aria-label", "Rating: " + rating.toFixed(1) + " out of 5");
+  }
+
   function getPreciousCodeBadge(code) {
     var value = String(code == null ? "" : code).trim();
     if (!value) {
@@ -626,6 +679,7 @@
     if (tagPrice) {
       tagPrice.innerHTML = "$ <span>--</span>";
     }
+    renderTagRating(null);
     if (tagDesc) {
       tagDesc.innerHTML = '<p class="text-muted mb-0">No description available.</p>';
     }
@@ -1072,6 +1126,7 @@
     var preciousTag = normalizeDisplayText(data.precious_tag, "-");
     var preciousMaterials = normalizeDisplayText(data.precious_materials, "-");
     var preciousPrice = formatPrice(data.precious_official_price);
+    var preciousRating = pickValue(data, ["precious_rating", "rating"], null);
     var descHTML = descToRichHTML(data.precious_desc);
 
     if (tagCodeTop) {
@@ -1102,6 +1157,7 @@
     if (tagPrice) {
       tagPrice.innerHTML = "$ <span>" + escapeHTML(preciousPrice) + "</span>";
     }
+    renderTagRating(preciousRating);
     if (tagDesc) {
       tagDesc.innerHTML =
         descHTML || '<p class="text-muted mb-0">No description available.</p>';
