@@ -13,6 +13,49 @@
   var openTagBtn = document.getElementById("go-verify-tag-btn");
   var openOrderBtn = document.getElementById("go-verify-order-btn");
   var closeBtn = document.getElementById("verify-search-close-btn");
+  var backToSearchBtn = document.getElementById("verify-tag-back-to-search-btn");
+  var fakeCardsArea = document.getElementById("verify-cards-fake");
+  var tagCardsArea = document.getElementById("verify-cardsarea-tag");
+  var orderCardsArea = document.getElementById("verify-cardsarea-order");
+  var tagResultRow = document.getElementById("verify-tag-result-row");
+  var tagNotFoundArea = document.getElementById("verify-tag-not-found");
+  var tagCodeTop = tagCardsArea
+    ? tagCardsArea.querySelector("#verify-card-tag-precious-code-1 span")
+    : null;
+  var tagCodeBadge = document.getElementById("verify-card-tag-precious-code-badge");
+  var tagName = tagCardsArea
+    ? tagCardsArea.querySelector("#verify-card-tag-precious-name")
+    : null;
+  var tagCodeLine = tagCardsArea
+    ? tagCardsArea.querySelector("#verify-card-tag-precious-code-2")
+    : null;
+  var tagTypeLine = tagCardsArea
+    ? tagCardsArea.querySelector("#verify-card-tag-precious-type")
+    : null;
+  var tagTagLine = tagCardsArea
+    ? tagCardsArea.querySelector("#verify-card-tag-precious-tag")
+    : null;
+  var tagMaterialsLine = tagCardsArea
+    ? tagCardsArea.querySelector("#verify-card-tag-precious-materials")
+    : null;
+  var tagPrice = tagCardsArea
+    ? tagCardsArea.querySelector("#verify-card-tag-precious-price")
+    : null;
+  var tagDesc = tagCardsArea
+    ? tagCardsArea.querySelector("#verify-card-tag-precious-desc")
+    : null;
+  var tagNotFoundCode = tagNotFoundArea
+    ? tagNotFoundArea.querySelector("h4")
+    : null;
+  var tagCarousel = tagCardsArea
+    ? tagCardsArea.querySelector("#carouselExampleFade")
+    : null;
+  var tagCarouselInner = tagCarousel
+    ? tagCarousel.querySelector(".carousel-inner")
+    : null;
+  var tagCarouselIndicators = tagCarousel
+    ? tagCarousel.querySelector(".carousel-indicators")
+    : null;
   var root = document.documentElement;
   var body = document.body;
   var currentMode = "tag";
@@ -373,6 +416,585 @@
     return controller;
   }
 
+  function escapeHTML(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function normalizeDisplayText(value, fallback) {
+    var text = String(value == null ? "" : value).trim();
+    if (text === "") {
+      return fallback || "-";
+    }
+    return text;
+  }
+
+  function sanitizeURL(url) {
+    var value = String(url == null ? "" : url).trim();
+    if (!value) {
+      return "";
+    }
+
+    if (/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(value)) {
+      return value;
+    }
+
+    return "";
+  }
+
+  function formatPrice(value) {
+    if (typeof value === "number" && isFinite(value)) {
+      return value.toFixed(2);
+    }
+
+    var parsed = Number(value);
+    if (isFinite(parsed)) {
+      return parsed.toFixed(2);
+    }
+
+    return "--";
+  }
+
+  function getPreciousCodeBadge(code) {
+    var value = String(code == null ? "" : code).trim();
+    if (!value) {
+      return "-";
+    }
+
+    var parts = value.split("-");
+    if (parts.length >= 2 && parts[1]) {
+      return parts[1];
+    }
+
+    return value;
+  }
+
+  function toggleSection(element, isVisible) {
+    if (!element) {
+      return;
+    }
+
+    element.classList.toggle("d-none", !isVisible);
+  }
+
+  function showTagResultArea() {
+    toggleSection(fakeCardsArea, false);
+    toggleSection(tagCardsArea, true);
+    toggleSection(orderCardsArea, false);
+    toggleSection(tagResultRow, true);
+    toggleSection(tagNotFoundArea, false);
+  }
+
+  function showTagNotFoundArea(code) {
+    toggleSection(fakeCardsArea, false);
+    toggleSection(tagCardsArea, true);
+    toggleSection(orderCardsArea, false);
+    toggleSection(tagResultRow, false);
+    toggleSection(tagNotFoundArea, true);
+
+    if (tagNotFoundCode) {
+      tagNotFoundCode.textContent = "# " + normalizeDisplayText(code, "-");
+    }
+  }
+
+  function showFakeArea() {
+    toggleSection(fakeCardsArea, true);
+    toggleSection(tagCardsArea, false);
+    toggleSection(orderCardsArea, false);
+    toggleSection(tagResultRow, true);
+    toggleSection(tagNotFoundArea, false);
+  }
+
+  function resetTagResultContent() {
+    if (tagCodeTop) {
+      tagCodeTop.textContent = "-";
+    }
+    if (tagCodeBadge) {
+      tagCodeBadge.textContent = "-";
+    }
+    if (tagName) {
+      tagName.textContent = "-";
+    }
+    if (tagCodeLine) {
+      tagCodeLine.innerHTML = '<span class="text-dark">Precious Code : </span> -';
+    }
+    if (tagTypeLine) {
+      tagTypeLine.innerHTML = '<span class="text-dark">Type : </span> -';
+    }
+    if (tagTagLine) {
+      tagTagLine.innerHTML = '<span class="text-dark">Tag : </span> -';
+    }
+    if (tagMaterialsLine) {
+      tagMaterialsLine.innerHTML = '<span class="text-dark">Materials : </span> -';
+    }
+    if (tagPrice) {
+      tagPrice.innerHTML = "$ <span>--</span>";
+    }
+    if (tagDesc) {
+      tagDesc.innerHTML = '<p class="text-muted mb-0">No description available.</p>';
+    }
+    if (tagNotFoundCode) {
+      tagNotFoundCode.textContent = "# -";
+    }
+    if (tagCarouselInner) {
+      tagCarouselInner.innerHTML = "";
+    }
+    if (tagCarouselIndicators) {
+      tagCarouselIndicators.innerHTML = "";
+    }
+  }
+
+  function resetToSearchView() {
+    if (inputTag) {
+      resetCodeInput(inputTag);
+    }
+    if (inputOrder) {
+      resetCodeInput(inputOrder);
+    }
+    setSearchMode("tag");
+    resetTagResultContent();
+    showFakeArea();
+  }
+
+  function collectPictureURLs(pictures) {
+    if (!Array.isArray(pictures)) {
+      return [];
+    }
+
+    var urls = [];
+    for (var i = 0; i < pictures.length; i += 1) {
+      var url = String(pictures[i] == null ? "" : pictures[i]).trim();
+      if (url) {
+        urls.push(url);
+      }
+    }
+
+    return urls;
+  }
+
+  function renderTagPictures(pictures) {
+    if (!tagCarousel || !tagCarouselInner || !tagCarouselIndicators) {
+      return;
+    }
+
+    tagCarouselInner.innerHTML = "";
+    tagCarouselIndicators.innerHTML = "";
+
+    var urls = collectPictureURLs(pictures);
+    if (urls.length === 0) {
+      return;
+    }
+
+    var carouselID = tagCarousel.getAttribute("id") || "carouselExampleFade";
+
+    for (var i = 0; i < urls.length; i += 1) {
+      var pictureURL = urls[i];
+
+      var slide = document.createElement("div");
+      slide.className = "carousel-item text-center" + (i === 0 ? " active" : "");
+
+      var image = document.createElement("img");
+      image.src = pictureURL;
+      image.alt = "Precious image " + (i + 1);
+      image.className = "img-fluid bg-body shadow-none rounded";
+      slide.appendChild(image);
+      tagCarouselInner.appendChild(slide);
+
+      var indicator = document.createElement("button");
+      indicator.type = "button";
+      indicator.setAttribute("data-bs-target", "#" + carouselID);
+      indicator.setAttribute("data-bs-slide-to", String(i));
+      indicator.setAttribute("aria-label", "Slide " + (i + 1));
+      if (i === 0) {
+        indicator.className = "h-auto rounded bg-light-subtle border active";
+        indicator.setAttribute("aria-current", "true");
+      } else {
+        indicator.className = "h-auto rounded bg-light-subtle border";
+      }
+      indicator.style.width = "auto";
+
+      var thumb = document.createElement("img");
+      thumb.src = pictureURL;
+      thumb.alt = "Precious thumbnail " + (i + 1);
+      thumb.className = "d-block avatar-xl";
+      indicator.appendChild(thumb);
+      tagCarouselIndicators.appendChild(indicator);
+    }
+
+    if (
+      window.bootstrap &&
+      window.bootstrap.Carousel &&
+      typeof window.bootstrap.Carousel.getOrCreateInstance === "function"
+    ) {
+      var carouselInstance = window.bootstrap.Carousel.getOrCreateInstance(tagCarousel);
+      carouselInstance.to(0);
+    }
+  }
+
+  function plainTextToHTML(text) {
+    var value = String(text == null ? "" : text).trim();
+    if (!value) {
+      return "";
+    }
+
+    var paragraphs = value.split(/\n{2,}/);
+    var html = "";
+    for (var i = 0; i < paragraphs.length; i += 1) {
+      var paragraph = paragraphs[i];
+      var safeText = escapeHTML(paragraph).replace(/\n/g, "<br>");
+      html += "<p>" + safeText + "</p>";
+    }
+    return html;
+  }
+
+  function sanitizeRichHTML(html) {
+    var raw = String(html == null ? "" : html);
+    if (!raw) {
+      return "";
+    }
+
+    if (typeof window.DOMParser !== "function") {
+      return plainTextToHTML(raw);
+    }
+
+    var parser = new window.DOMParser();
+    var doc = parser.parseFromString("<div>" + raw + "</div>", "text/html");
+    var root = doc.body ? doc.body.firstElementChild : null;
+    if (!root) {
+      return plainTextToHTML(raw);
+    }
+
+    var allowedTags = {
+      a: true,
+      b: true,
+      strong: true,
+      i: true,
+      em: true,
+      u: true,
+      s: true,
+      p: true,
+      br: true,
+      ul: true,
+      ol: true,
+      li: true,
+      blockquote: true,
+      pre: true,
+      code: true,
+      h1: true,
+      h2: true,
+      h3: true,
+      h4: true,
+      h5: true,
+      h6: true,
+      span: true,
+    };
+
+    function cleanNode(node) {
+      if (!node) {
+        return null;
+      }
+
+      if (node.nodeType === 3) {
+        return document.createTextNode(node.nodeValue || "");
+      }
+
+      if (node.nodeType !== 1) {
+        return null;
+      }
+
+      var tagName = String(node.tagName || "").toLowerCase();
+      if (
+        tagName === "script" ||
+        tagName === "style" ||
+        tagName === "iframe" ||
+        tagName === "object" ||
+        tagName === "embed"
+      ) {
+        return null;
+      }
+
+      var isAllowedTag = !!allowedTags[tagName];
+      var container = isAllowedTag
+        ? document.createElement(tagName)
+        : document.createDocumentFragment();
+
+      if (isAllowedTag && tagName === "a") {
+        var href = sanitizeURL(node.getAttribute("href"));
+        if (href) {
+          container.setAttribute("href", href);
+          container.setAttribute("target", "_blank");
+          container.setAttribute("rel", "noopener noreferrer");
+        }
+      }
+
+      var child = node.firstChild;
+      while (child) {
+        var cleanedChild = cleanNode(child);
+        if (cleanedChild) {
+          container.appendChild(cleanedChild);
+        }
+        child = child.nextSibling;
+      }
+
+      return container;
+    }
+
+    var safeRoot = document.createElement("div");
+    var current = root.firstChild;
+    while (current) {
+      var cleaned = cleanNode(current);
+      if (cleaned) {
+        safeRoot.appendChild(cleaned);
+      }
+      current = current.nextSibling;
+    }
+
+    return safeRoot.innerHTML;
+  }
+
+  function applyInlineAttributes(text, attributes) {
+    var html = escapeHTML(text);
+    var attrs = attributes || {};
+
+    if (attrs.link) {
+      var href = sanitizeURL(attrs.link);
+      if (href) {
+        html =
+          '<a href="' +
+          escapeHTML(href) +
+          '" target="_blank" rel="noopener noreferrer">' +
+          html +
+          "</a>";
+      }
+    }
+
+    if (attrs.bold) {
+      html = "<strong>" + html + "</strong>";
+    }
+    if (attrs.italic) {
+      html = "<em>" + html + "</em>";
+    }
+    if (attrs.underline) {
+      html = "<u>" + html + "</u>";
+    }
+    if (attrs.strike) {
+      html = "<s>" + html + "</s>";
+    }
+    if (attrs.code) {
+      html = "<code>" + html + "</code>";
+    }
+    if (attrs.script === "sub") {
+      html = "<sub>" + html + "</sub>";
+    }
+    if (attrs.script === "super") {
+      html = "<sup>" + html + "</sup>";
+    }
+
+    return html;
+  }
+
+  function quillDeltaToHTML(desc) {
+    var ops = [];
+    if (desc && Array.isArray(desc.ops)) {
+      ops = desc.ops;
+    } else if (Array.isArray(desc)) {
+      ops = desc;
+    }
+
+    if (!ops.length) {
+      return "";
+    }
+
+    var lines = [];
+    var lineHTML = "";
+
+    function pushLine(attrs) {
+      lines.push({
+        html: lineHTML,
+        attrs: attrs || {},
+      });
+      lineHTML = "";
+    }
+
+    for (var i = 0; i < ops.length; i += 1) {
+      var op = ops[i] || {};
+      var attrs = op.attributes || {};
+      var insert = op.insert;
+
+      if (typeof insert === "string") {
+        var chunks = insert.split("\n");
+        for (var c = 0; c < chunks.length; c += 1) {
+          var chunk = chunks[c];
+          if (chunk) {
+            lineHTML += applyInlineAttributes(chunk, attrs);
+          }
+
+          if (c < chunks.length - 1) {
+            pushLine(attrs);
+          }
+        }
+        continue;
+      }
+
+      if (insert && typeof insert === "object" && typeof insert.image === "string") {
+        var imageURL = sanitizeURL(insert.image);
+        if (imageURL) {
+          lineHTML +=
+            '<img src="' +
+            escapeHTML(imageURL) +
+            '" alt="Description image" class="img-fluid rounded my-2">';
+        }
+      }
+    }
+
+    if (lineHTML) {
+      pushLine({});
+    }
+
+    var html = "";
+    var activeListType = "";
+
+    function closeActiveList() {
+      if (activeListType) {
+        html += "</" + activeListType + ">";
+        activeListType = "";
+      }
+    }
+
+    for (var j = 0; j < lines.length; j += 1) {
+      var line = lines[j];
+      var lineAttrs = line.attrs || {};
+      var lineContent = line.html || "<br>";
+      var listType = "";
+
+      if (lineAttrs.list === "ordered") {
+        listType = "ol";
+      } else if (lineAttrs.list === "bullet") {
+        listType = "ul";
+      }
+
+      if (listType) {
+        if (activeListType !== listType) {
+          closeActiveList();
+          activeListType = listType;
+          html += "<" + listType + ">";
+        }
+        html += "<li>" + lineContent + "</li>";
+        continue;
+      }
+
+      closeActiveList();
+
+      if (lineAttrs.header) {
+        var level = Number(lineAttrs.header);
+        if (!(level >= 1 && level <= 6)) {
+          level = 4;
+        }
+        html += "<h" + level + ">" + lineContent + "</h" + level + ">";
+        continue;
+      }
+
+      if (lineAttrs.blockquote) {
+        html += "<blockquote>" + lineContent + "</blockquote>";
+        continue;
+      }
+
+      if (lineAttrs["code-block"]) {
+        html += "<pre><code>" + lineContent + "</code></pre>";
+        continue;
+      }
+
+      html += "<p>" + lineContent + "</p>";
+    }
+
+    closeActiveList();
+    return html;
+  }
+
+  function descToRichHTML(desc) {
+    if (desc == null) {
+      return "";
+    }
+
+    if (typeof desc === "string") {
+      var trimmed = desc.trim();
+      if (!trimmed) {
+        return "";
+      }
+
+      if (/<[a-z][\s\S]*>/i.test(trimmed)) {
+        return sanitizeRichHTML(trimmed);
+      }
+
+      return plainTextToHTML(trimmed);
+    }
+
+    if (typeof desc === "object") {
+      var deltaHTML = quillDeltaToHTML(desc);
+      if (deltaHTML) {
+        return sanitizeRichHTML(deltaHTML);
+      }
+
+      return plainTextToHTML(JSON.stringify(desc, null, 2));
+    }
+
+    return plainTextToHTML(String(desc));
+  }
+
+  function renderTagSearchResult(data) {
+    if (!data || typeof data !== "object") {
+      return;
+    }
+
+    var preciousCode = normalizeDisplayText(data.precious_code, "-");
+    var preciousName = normalizeDisplayText(data.precious_name, "-");
+    var preciousType = normalizeDisplayText(data.precious_type, "-");
+    var preciousTag = normalizeDisplayText(data.precious_tag, "-");
+    var preciousMaterials = normalizeDisplayText(data.precious_materials, "-");
+    var preciousPrice = formatPrice(data.precious_official_price);
+    var descHTML = descToRichHTML(data.precious_desc);
+
+    if (tagCodeTop) {
+      tagCodeTop.textContent = preciousCode;
+    }
+    if (tagCodeBadge) {
+      tagCodeBadge.textContent = getPreciousCodeBadge(preciousCode);
+    }
+    if (tagName) {
+      tagName.textContent = preciousName;
+    }
+    if (tagCodeLine) {
+      tagCodeLine.innerHTML =
+        '<span class="text-dark">Precious Code : </span> ' + escapeHTML(preciousCode);
+    }
+    if (tagTypeLine) {
+      tagTypeLine.innerHTML =
+        '<span class="text-dark">Type : </span> ' + escapeHTML(preciousType);
+    }
+    if (tagTagLine) {
+      tagTagLine.innerHTML =
+        '<span class="text-dark">Tag : </span> ' + escapeHTML(preciousTag);
+    }
+    if (tagMaterialsLine) {
+      tagMaterialsLine.innerHTML =
+        '<span class="text-dark">Materials : </span> ' + escapeHTML(preciousMaterials);
+    }
+    if (tagPrice) {
+      tagPrice.innerHTML = "$ <span>" + escapeHTML(preciousPrice) + "</span>";
+    }
+    if (tagDesc) {
+      tagDesc.innerHTML =
+        descHTML || '<p class="text-muted mb-0">No description available.</p>';
+    }
+
+    renderTagPictures(data.precious_pictures);
+    showTagResultArea();
+  }
+
   function setScrollLock(isLocked) {
     if (!root || !body) {
       return;
@@ -517,16 +1139,26 @@
         return response.json().then(function (result) {
           if (!response.ok || !result || !result.success) {
             var message = (result && result.message) || "Search failed";
-            throw new Error(message);
+            var searchError = new Error(message);
+            searchError.status = response.status;
+            searchError.notFound =
+              response.status === 404 || /not found/i.test(message);
+            throw searchError;
           }
           return result.data;
         });
       })
       .then(function (data) {
-        console.log("verify tag search result:", data);
+        renderTagSearchResult(data);
         closeSearch();
       })
       .catch(function (error) {
+        if (error && error.notFound) {
+          showTagNotFoundArea(tagCode);
+          closeSearch();
+          return;
+        }
+
         console.error("verify tag search failed:", error);
         setInfoMessage(error.message || "Search failed", true);
       })
@@ -587,7 +1219,7 @@
   }
 
   function bindEvents() {
-    setSearchMode("tag");
+    resetToSearchView();
     bindStrictCodeInput(inputTag, TAG_INPUT_CONFIG);
     bindStrictCodeInput(inputOrder, ORDER_INPUT_CONFIG);
 
@@ -605,6 +1237,14 @@
 
     if (closeBtn) {
       closeBtn.addEventListener("click", closeSearch);
+    }
+
+    if (backToSearchBtn) {
+      backToSearchBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        resetToSearchView();
+        openSearch("tag");
+      });
     }
 
     if (panel && form) {
