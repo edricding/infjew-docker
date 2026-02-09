@@ -14,11 +14,13 @@
   var openOrderBtn = document.getElementById("go-verify-order-btn");
   var closeBtn = document.getElementById("verify-search-close-btn");
   var backToSearchBtn = document.getElementById("verify-tag-back-to-search-btn");
+  var orderBackToSearchBtn = document.getElementById("verify-order-back-to-search-btn");
   var fakeCardsArea = document.getElementById("verify-cards-fake");
   var tagCardsArea = document.getElementById("verify-cardsarea-tag");
   var orderCardsArea = document.getElementById("verify-cardsarea-order");
   var tagResultRow = document.getElementById("verify-tag-result-row");
   var tagNotFoundArea = document.getElementById("verify-tag-not-found");
+  var orderNotFoundArea = document.getElementById("verify-order-not-found");
   var tagCodeTop = tagCardsArea
     ? tagCardsArea.querySelector("#verify-card-tag-precious-code-1 span")
     : null;
@@ -507,6 +509,7 @@
     toggleSection(orderCardsArea, false);
     toggleSection(tagResultRow, true);
     toggleSection(tagNotFoundArea, false);
+    toggleSection(orderNotFoundArea, false);
   }
 
   function resetTagResultContent() {
@@ -558,6 +561,11 @@
     setSearchMode("tag");
     resetTagResultContent();
     showFakeArea();
+  }
+
+  function startSearchFromTopbar(mode) {
+    resetToSearchView();
+    openSearch(mode);
   }
 
   function collectPictureURLs(pictures) {
@@ -1225,13 +1233,13 @@
 
     if (openTagBtn) {
       openTagBtn.addEventListener("click", function () {
-        openSearch("tag");
+        startSearchFromTopbar("tag");
       });
     }
 
     if (openOrderBtn) {
       openOrderBtn.addEventListener("click", function () {
-        openSearch("order");
+        startSearchFromTopbar("order");
       });
     }
 
@@ -1242,8 +1250,14 @@
     if (backToSearchBtn) {
       backToSearchBtn.addEventListener("click", function (event) {
         event.preventDefault();
-        resetToSearchView();
-        openSearch("tag");
+        startSearchFromTopbar("tag");
+      });
+    }
+
+    if (orderBackToSearchBtn) {
+      orderBackToSearchBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        startSearchFromTopbar("order");
       });
     }
 
