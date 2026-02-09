@@ -551,6 +551,7 @@
                         </div>
 
                         <div class="verify-cardsarea-order" id="verify-cardsarea-order">
+                            <div id="verify-order-result-content">
                             <div class="row mt-3">
                                 <div class="col-lg-12">
                                     <div class="card placeholder-glow">
@@ -564,12 +565,12 @@
                                                         Order
                                                         <i class="ti ti-arrow-right"></i>
                                                         <span
-                                                            class="badge bg-light-subtle rounded-pill text-dark border fs-12 py-1 px-2">
+                                                            class="badge bg-light-subtle rounded-pill text-dark border fs-12 py-1 px-2" id="verify-order-code-badge">
                                                             #OC3142-EN
                                                         </span>
                                                     </p>
 
-                                                    <h3 class="mb-1 text-dark fw-semibold">Order ID : #OC3142-EN <span
+                                                    <h3 class="mb-1 text-dark fw-semibold">Order ID : <span id="verify-order-code-title">#OC3142-EN</span> <span
                                                             class="badge bg-warning-subtle rounded-pill text-warning border border-warning fs-11 py-1 px-2 my-2">Shipping</span>
                                                         <span
                                                             class="badge bg-success-subtle rounded-pill text-success border border-success fs-11 py-1 px-2  my-2">
@@ -577,14 +578,12 @@
                                                     </h3>
 
                                                     <div class="d-flex flex-wrap align-items-center gap-2">
-                                                        <p class="mb-0 fs-15">Order Date : 2 July 2024</p>
+                                                        <p class="mb-0 fs-15">Order Date : <span id="verify-order-date">2 July 2024</span></p>
                                                         <div>|</div>
                                                         <div>
                                                             <p
                                                                 class="mb-0 fs-15 text-success fw-medium  d-flex align-items-center gap-1">
-                                                                <i class="ti ti-plane-tilt"></i>Estimated delivery: July
-                                                                9,
-                                                                2024
+                                                                <i class="ti ti-plane-tilt"></i>Estimated delivery: <span id="verify-order-estimated-delivery">July 9, 2024</span>
                                                             </p>
                                                         </div>
                                                     </div>
@@ -815,6 +814,7 @@
                             <div class="d-flex justify-content-end gap-2 text-end mb-3">
                                 <a href="#" class="btn btn-outline-primary">DOWNLOAD</a>
                             </div>
+                            </div>
 
                             <div class="col-12 d-none" id="verify-order-not-found">
                                 <div class="card overflow-hidden text-center h-100 p-xxl-4 p-3 mb-0">
@@ -825,7 +825,7 @@
                                             alt="error 400 img" height="230">
 
                                         <h2 class="fw-bold mt-3 text-primary lh-base">Order Not Found! </h2>
-                                        <h4 class="mt-2 text-dark lh-base"># INFO-A000000</h4>
+                                        <h4 class="mt-2 text-dark lh-base" id="verify-order-not-found-code"># INFO-A000000</h4>
                                         <p class="text-muted fs-12 mb-3">Make sure the Order Number is
                                             correct.<br />Please check your input and search again.</p>
                                         <a href="#" class="btn btn-infjew mb-3" id="verify-order-back-to-search-btn"><i class="ti ti-receipt fs-22 me-2"></i>

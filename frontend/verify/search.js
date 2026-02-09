@@ -21,6 +21,7 @@
   var tagResultRow = document.getElementById("verify-tag-result-row");
   var tagNotFoundArea = document.getElementById("verify-tag-not-found");
   var orderNotFoundArea = document.getElementById("verify-order-not-found");
+  var orderResultContent = document.getElementById("verify-order-result-content");
   var tagCodeTop = tagCardsArea
     ? tagCardsArea.querySelector("#verify-card-tag-precious-code-1 span")
     : null;
@@ -58,15 +59,31 @@
   var tagCarouselIndicators = tagCarousel
     ? tagCarousel.querySelector(".carousel-indicators")
     : null;
+  var orderCodeBadge = document.getElementById("verify-order-code-badge");
+  var orderCodeTitle = document.getElementById("verify-order-code-title");
+  var orderDate = document.getElementById("verify-order-date");
+  var orderEstimatedDelivery = document.getElementById("verify-order-estimated-delivery");
+  var orderNotFoundCode = document.getElementById("verify-order-not-found-code");
+  var defaultOrderCodeBadgeText = orderCodeBadge ? orderCodeBadge.textContent : "# -";
+  var defaultOrderCodeTitleText = orderCodeTitle ? orderCodeTitle.textContent : "# -";
+  var defaultOrderDateText = orderDate ? orderDate.textContent : "-";
+  var defaultOrderEstimatedDeliveryText = orderEstimatedDelivery
+    ? orderEstimatedDelivery.textContent
+    : "-";
+  var defaultOrderNotFoundCodeText = orderNotFoundCode
+    ? orderNotFoundCode.textContent
+    : "# -";
   var root = document.documentElement;
   var body = document.body;
   var currentMode = "tag";
   var isTagSearching = false;
+  var isOrderSearching = false;
 
   var TAG_CODE_PATTERN = /^INF-[A-Z]\d{2}-[A-Z]\d{2}$/;
   var ORDER_CODE_PATTERN = /^INFO-[A-Z]\d{6}$/;
   var TAG_CODE_FORMAT = "INF-A00-A00";
   var ORDER_CODE_FORMAT = "INFO-A000000";
+  var ORDER_VERIFY_API_PATH = "/api/public/verify/order";
 
   var TAG_INPUT_CONFIG = {
     prefix: "INF-",
@@ -232,6 +249,21 @@
     if (inputElement) {
       inputElement.value = "";
     }
+  }
+
+  function setCodeInput(inputElement, code, config) {
+    var controller = getCodeController(inputElement);
+    if (controller && typeof controller.setCode === "function") {
+      controller.setCode(code);
+      return;
+    }
+
+    if (!inputElement) {
+      return;
+    }
+
+    var normalizedCode = formatCode(extractRawCode(code, config), config);
+    inputElement.value = normalizedCode;
   }
 
   function bindStrictCodeInput(inputElement, config) {
@@ -402,6 +434,10 @@
         raw = "";
         render();
       },
+      setCode: function (code) {
+        raw = extractRawCode(code, config);
+        render();
+      },
       getRaw: function () {
         return raw;
       },
@@ -433,6 +469,38 @@
       return fallback || "-";
     }
     return text;
+  }
+
+  function getByPath(data, path) {
+    if (!data || typeof data !== "object") {
+      return null;
+    }
+
+    var parts = String(path || "").split(".");
+    var current = data;
+    for (var i = 0; i < parts.length; i += 1) {
+      var key = parts[i];
+      if (
+        !current ||
+        typeof current !== "object" ||
+        !(key in current)
+      ) {
+        return null;
+      }
+      current = current[key];
+    }
+
+    return current;
+  }
+
+  function pickValue(data, paths, fallback) {
+    for (var i = 0; i < paths.length; i += 1) {
+      var value = getByPath(data, paths[i]);
+      if (value != null && String(value).trim() !== "") {
+        return value;
+      }
+    }
+    return fallback;
   }
 
   function sanitizeURL(url) {
@@ -503,12 +571,33 @@
     }
   }
 
+  function showOrderResultArea() {
+    toggleSection(fakeCardsArea, false);
+    toggleSection(tagCardsArea, false);
+    toggleSection(orderCardsArea, true);
+    toggleSection(orderResultContent, true);
+    toggleSection(orderNotFoundArea, false);
+  }
+
+  function showOrderNotFoundArea(code) {
+    toggleSection(fakeCardsArea, false);
+    toggleSection(tagCardsArea, false);
+    toggleSection(orderCardsArea, true);
+    toggleSection(orderResultContent, false);
+    toggleSection(orderNotFoundArea, true);
+
+    if (orderNotFoundCode) {
+      orderNotFoundCode.textContent = "# " + normalizeDisplayText(code, "-");
+    }
+  }
+
   function showFakeArea() {
     toggleSection(fakeCardsArea, true);
     toggleSection(tagCardsArea, false);
     toggleSection(orderCardsArea, false);
     toggleSection(tagResultRow, true);
     toggleSection(tagNotFoundArea, false);
+    toggleSection(orderResultContent, true);
     toggleSection(orderNotFoundArea, false);
   }
 
@@ -551,6 +640,24 @@
     }
   }
 
+  function resetOrderResultContent() {
+    if (orderCodeBadge) {
+      orderCodeBadge.textContent = defaultOrderCodeBadgeText;
+    }
+    if (orderCodeTitle) {
+      orderCodeTitle.textContent = defaultOrderCodeTitleText;
+    }
+    if (orderDate) {
+      orderDate.textContent = defaultOrderDateText;
+    }
+    if (orderEstimatedDelivery) {
+      orderEstimatedDelivery.textContent = defaultOrderEstimatedDeliveryText;
+    }
+    if (orderNotFoundCode) {
+      orderNotFoundCode.textContent = defaultOrderNotFoundCodeText;
+    }
+  }
+
   function resetToSearchView() {
     if (inputTag) {
       resetCodeInput(inputTag);
@@ -560,6 +667,7 @@
     }
     setSearchMode("tag");
     resetTagResultContent();
+    resetOrderResultContent();
     showFakeArea();
   }
 
@@ -1003,6 +1111,85 @@
     showTagResultArea();
   }
 
+  function renderOrderSearchResult(data, fallbackCode) {
+    var source = data && typeof data === "object" ? data : {};
+    var orderCodeValue = pickValue(
+      source,
+      [
+        "order_code",
+        "order_number",
+        "order_id",
+        "code",
+        "number",
+        "order.code",
+        "order.number",
+      ],
+      fallbackCode || "-"
+    );
+    var orderDateValue = pickValue(
+      source,
+      [
+        "order_date",
+        "created_at",
+        "createdAt",
+        "date",
+        "order.date",
+        "order.created_at",
+      ],
+      defaultOrderDateText
+    );
+    var estimatedDeliveryValue = pickValue(
+      source,
+      [
+        "estimated_delivery",
+        "estimated_delivery_date",
+        "estimatedDelivery",
+        "eta",
+        "delivery_date",
+        "order.estimated_delivery",
+      ],
+      defaultOrderEstimatedDeliveryText
+    );
+
+    var orderCodeText = normalizeDisplayText(orderCodeValue, fallbackCode || "-");
+    var orderDateText = normalizeDisplayText(orderDateValue, defaultOrderDateText);
+    var estimatedDeliveryText = normalizeDisplayText(
+      estimatedDeliveryValue,
+      defaultOrderEstimatedDeliveryText
+    );
+
+    if (orderCodeBadge) {
+      orderCodeBadge.textContent = orderCodeText.indexOf("#") === 0
+        ? orderCodeText
+        : "# " + orderCodeText;
+    }
+    if (orderCodeTitle) {
+      orderCodeTitle.textContent = orderCodeText.indexOf("#") === 0
+        ? orderCodeText
+        : "# " + orderCodeText;
+    }
+    if (orderDate) {
+      orderDate.textContent = orderDateText;
+    }
+    if (orderEstimatedDelivery) {
+      orderEstimatedDelivery.textContent = estimatedDeliveryText;
+    }
+
+    showOrderResultArea();
+  }
+
+  function parseResponseJSON(response) {
+    return response.text().then(function (text) {
+      var parsed = null;
+      try {
+        parsed = text ? JSON.parse(text) : null;
+      } catch (error) {
+        parsed = null;
+      }
+      return parsed;
+    });
+  }
+
   function setScrollLock(isLocked) {
     if (!root || !body) {
       return;
@@ -1109,7 +1296,7 @@
     }
   }
 
-  function searchByTagCode() {
+  function searchByTagCode(forcedTagCode) {
     if (!inputTag) {
       return;
     }
@@ -1118,16 +1305,21 @@
       return;
     }
 
-    var tagCode = getInputCode(inputTag, TAG_INPUT_CONFIG);
-    var tagRawLength = getInputRawLength(inputTag, TAG_INPUT_CONFIG);
+    var tagCode = "";
+    if (typeof forcedTagCode === "string" && forcedTagCode.trim() !== "") {
+      tagCode = forcedTagCode.trim().toUpperCase();
+    } else {
+      tagCode = getInputCode(inputTag, TAG_INPUT_CONFIG);
+      var tagRawLength = getInputRawLength(inputTag, TAG_INPUT_CONFIG);
 
-    if (!tagCode) {
-      if (tagRawLength === 0) {
-        setInfoMessage("Please enter a tag code.", true);
-      } else {
-        setInfoMessage("Invalid format. Use " + TAG_CODE_FORMAT + ".", true);
+      if (!tagCode) {
+        if (tagRawLength === 0) {
+          setInfoMessage("Please enter a tag code.", true);
+        } else {
+          setInfoMessage("Invalid format. Use " + TAG_CODE_FORMAT + ".", true);
+        }
+        return;
       }
-      return;
     }
 
     if (!TAG_CODE_PATTERN.test(tagCode)) {
@@ -1175,42 +1367,195 @@
       });
   }
 
-  function validateOrderCode() {
+  function searchByOrderCode(forcedOrderCode) {
     if (!inputOrder) {
-      return false;
+      return;
     }
 
-    var orderCode = getInputCode(inputOrder, ORDER_INPUT_CONFIG);
-    var orderRawLength = getInputRawLength(inputOrder, ORDER_INPUT_CONFIG);
+    if (isOrderSearching) {
+      return;
+    }
 
-    if (!orderCode) {
-      if (orderRawLength === 0) {
-        setInfoMessage("Please enter an order code.", true);
-      } else {
-        setInfoMessage("Invalid format. Use " + ORDER_CODE_FORMAT + ".", true);
+    var orderCode = "";
+    if (typeof forcedOrderCode === "string" && forcedOrderCode.trim() !== "") {
+      orderCode = forcedOrderCode.trim().toUpperCase();
+    } else {
+      orderCode = getInputCode(inputOrder, ORDER_INPUT_CONFIG);
+      var orderRawLength = getInputRawLength(inputOrder, ORDER_INPUT_CONFIG);
+
+      if (!orderCode) {
+        if (orderRawLength === 0) {
+          setInfoMessage("Please enter an order code.", true);
+        } else {
+          setInfoMessage("Invalid format. Use " + ORDER_CODE_FORMAT + ".", true);
+        }
+        return;
       }
-      return false;
     }
 
     if (!ORDER_CODE_PATTERN.test(orderCode)) {
       setInfoMessage("Invalid format. Use " + ORDER_CODE_FORMAT + ".", true);
-      return false;
+      return;
     }
 
-    return true;
+    setInfoMessage("Searching...", false);
+    isOrderSearching = true;
+
+    fetch(ORDER_VERIFY_API_PATH + "?order_code=" + encodeURIComponent(orderCode), {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then(function (response) {
+        return parseResponseJSON(response).then(function (result) {
+          if (!response.ok || !result || !result.success) {
+            var message = (result && result.message) || "Search failed";
+            var searchError = new Error(message);
+            searchError.status = response.status;
+            searchError.notFound =
+              response.status === 404 || /not found/i.test(message);
+            throw searchError;
+          }
+          return result.data;
+        });
+      })
+      .then(function (data) {
+        renderOrderSearchResult(data, orderCode);
+        closeSearch();
+      })
+      .catch(function (error) {
+        if (error && error.notFound) {
+          showOrderNotFoundArea(orderCode);
+          closeSearch();
+          return;
+        }
+
+        console.error("verify order search failed:", error);
+        setInfoMessage(error.message || "Search failed", true);
+      })
+      .finally(function () {
+        isOrderSearching = false;
+      });
   }
 
   function handleSearchSubmit() {
-    if (currentMode === "tag") {
-      searchByTagCode();
+    var searchType = currentMode === "tag" ? "tag" : "order";
+    var searchCode = "";
+
+    if (searchType === "tag") {
+      searchCode = getInputCode(inputTag, TAG_INPUT_CONFIG);
+      var tagRawLength = getInputRawLength(inputTag, TAG_INPUT_CONFIG);
+
+      if (!searchCode) {
+        if (tagRawLength === 0) {
+          setInfoMessage("Please enter a tag code.", true);
+        } else {
+          setInfoMessage("Invalid format. Use " + TAG_CODE_FORMAT + ".", true);
+        }
+        return;
+      }
+
+      if (!TAG_CODE_PATTERN.test(searchCode)) {
+        setInfoMessage("Invalid format. Use " + TAG_CODE_FORMAT + ".", true);
+        return;
+      }
+    } else {
+      searchCode = getInputCode(inputOrder, ORDER_INPUT_CONFIG);
+      var orderRawLength = getInputRawLength(inputOrder, ORDER_INPUT_CONFIG);
+
+      if (!searchCode) {
+        if (orderRawLength === 0) {
+          setInfoMessage("Please enter an order code.", true);
+        } else {
+          setInfoMessage("Invalid format. Use " + ORDER_CODE_FORMAT + ".", true);
+        }
+        return;
+      }
+
+      if (!ORDER_CODE_PATTERN.test(searchCode)) {
+        setInfoMessage("Invalid format. Use " + ORDER_CODE_FORMAT + ".", true);
+        return;
+      }
+    }
+
+    if (!window || !window.location) {
       return;
     }
 
-    if (!validateOrderCode()) {
+    var targetQuery =
+      "?search=" +
+      encodeURIComponent(searchType) +
+      "&value=" +
+      encodeURIComponent(searchCode);
+    var targetPath = window.location.pathname || "/";
+    var targetURL = targetPath + targetQuery;
+
+    if (window.location.search === targetQuery) {
+      window.location.reload();
       return;
     }
 
-    setInfoMessage("Order search is not ready yet.", true);
+    window.location.assign(targetURL);
+  }
+
+  function getSearchContextFromURL() {
+    if (
+      !window ||
+      !window.location ||
+      typeof window.URLSearchParams !== "function"
+    ) {
+      return null;
+    }
+
+    var query = String(window.location.search || "");
+    if (!query) {
+      return null;
+    }
+
+    var params = new window.URLSearchParams(query);
+    var searchType = String(params.get("search") || "").trim().toLowerCase();
+    var searchValue = String(params.get("value") || "").trim().toUpperCase();
+
+    if (!searchType || !searchValue) {
+      return null;
+    }
+
+    return {
+      searchType: searchType,
+      searchValue: searchValue,
+    };
+  }
+
+  function runInitialURLSearch() {
+    var context = getSearchContextFromURL();
+    if (!context) {
+      return;
+    }
+
+    if (context.searchType === "tag") {
+      setCodeInput(inputTag, context.searchValue, TAG_INPUT_CONFIG);
+      setSearchMode("tag");
+
+      if (!TAG_CODE_PATTERN.test(context.searchValue)) {
+        showTagNotFoundArea(context.searchValue);
+        return;
+      }
+
+      searchByTagCode(context.searchValue);
+      return;
+    }
+
+    if (context.searchType === "order") {
+      setCodeInput(inputOrder, context.searchValue, ORDER_INPUT_CONFIG);
+      setSearchMode("order");
+
+      if (!ORDER_CODE_PATTERN.test(context.searchValue)) {
+        showOrderNotFoundArea(context.searchValue);
+        return;
+      }
+
+      searchByOrderCode(context.searchValue);
+    }
   }
 
   function bindEnterSearch(inputElement) {
@@ -1284,6 +1629,8 @@
         closeSearch();
       }
     });
+
+    runInitialURLSearch();
   }
 
   bindEvents();
