@@ -98,15 +98,20 @@ body.verify-scroll-locked {
   font-size: 90%;
   font-weight: 700;
   display: block;
-  width: 75%;
+  width: 100%;
   margin: 0 auto;
-  padding: 0.85em 0;
   text-align: right;
   color: #334155;
   opacity: 0;
   transform: translate3d(0, 20px, 0);
   transition: opacity 1s, transform 1s;
   transition-timing-function: cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.verify-search-panel_eg{
+  position: absolute;
+  text-align: left;
+  bottom: 20px;
 }
 
 .verify-search-panel.is-open .verify-search-panel__info {
