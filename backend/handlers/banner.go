@@ -271,6 +271,81 @@ func CreateBannerHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func UpdateBannerHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
+			"success": false,
+			"message": "Method Not Allowed",
+		})
+		return
+	}
+
+	if err := ensureBannerSortOrderColumn(); err != nil {
+		log.Printf("failed to ensure banner sort schema: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Database schema error",
+		})
+		return
+	}
+
+	var req Banner
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Invalid request body",
+		})
+		return
+	}
+
+	if req.ID <= 0 {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"success": false,
+			"message": "Invalid banner id",
+		})
+		return
+	}
+
+	updateQuery := `
+		UPDATE banner
+		SET title1 = ?, title2 = ?, subtitle = ?, url = ?, picurl = ?
+		WHERE id = ?
+	`
+	result, err := db.DB.Exec(updateQuery, req.Title1, req.Title2, req.Subtitle, req.URL, req.PicURL, req.ID)
+	if err != nil {
+		log.Printf("failed to update banner: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Update failed",
+		})
+		return
+	}
+
+	if affectedRows, err := result.RowsAffected(); err == nil && affectedRows == 0 {
+		writeJSON(w, http.StatusNotFound, map[string]interface{}{
+			"success": false,
+			"message": "Banner not found",
+		})
+		return
+	}
+
+	banners, err := queryBannersOrdered()
+	if err != nil {
+		log.Printf("failed to query banner list after update: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"success": false,
+			"message": "Database query failed",
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"message": "Banner updated successfully",
+		"data":    banners,
+	})
+}
+
 func ReorderBannerHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{

@@ -428,6 +428,93 @@
         </div>
         <!-- end modal dialog-->
       </div>
+
+      <div class="modal fade" id="EditBannerModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="EditBannerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+          <div class="modal-content">
+            <div class="modal-header text-bg-primary border-0">
+              <h5 class="modal-title" id="EditBannerModalLabel">Edit Banner</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <!-- end modal header -->
+
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="card">
+                    <div class="card-header border-bottom border-dashed">
+                      <h4 class="card-title">Banner Information</h4>
+                      <p class="text-muted mb-0">
+                        Items on the list are just for the "Banner" section.
+                      </p>
+                    </div>
+
+                    <div class="card-body">
+                      <input type="hidden" id="edit-banner-id" />
+                      <div class="row">
+                        <div class="col-lg-12">
+                          <div class="mb-3">
+                            <label for="edit-banner-title-1" class="form-label">Title - Line 1</label>
+                            <input type="text" class="form-control" id="edit-banner-title-1"
+                              placeholder="Enter Banner Title - Line 1" required="" />
+                          </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                          <div class="mb-3">
+                            <label for="edit-banner-title-2" class="form-label">Title - Line 2</label>
+                            <input type="text" class="form-control" id="edit-banner-title-2"
+                              placeholder="Enter Banner Title - Line 2" required="" />
+                          </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                          <div class="mb-3">
+                            <label for="edit-banner-subtitle" class="form-label">Subtitle</label>
+                            <input type="text" class="form-control" id="edit-banner-subtitle"
+                              placeholder="Enter Banner Subtitle" required="" />
+                          </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                          <div class="mb-3">
+                            <label for="edit-banner-url" class="form-label">Banner URL</label>
+                            <input type="text" class="form-control" id="edit-banner-url" placeholder="Enter Banner URL"
+                              required="" />
+                          </div>
+                        </div>
+                        <div class="col-lg-12">
+                          <div class="mb-3">
+                            <label for="edit-banner-picture-url" class="form-label">Banner Picture URL</label>
+                            <input type="text" class="form-control" id="edit-banner-picture-url"
+                              placeholder="Enter Banner Picture URL" required="" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-light" data-bs-dismiss="modal" id="close-edit-banner-btn">
+                Close
+              </button>
+              <button type="button" class="btn btn-primary" id="save-banner-btn">
+                Save
+              </button>
+            </div>
+            <!-- end modal footer -->
+          </div>
+          <!-- end modal content-->
+        </div>
+        <!-- end modal dialog-->
+      </div>
+
+
+
       <div class="modal fade" id="EditCountingDownModal" data-bs-backdrop="static" data-bs-keyboard="false"
         tabindex="-1" aria-labelledby="EditCountingDownModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">

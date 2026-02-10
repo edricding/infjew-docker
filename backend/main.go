@@ -31,6 +31,7 @@ func main() {
 	mux.Handle("/api/banners", ApplyMiddlewares(http.HandlerFunc(handlers.GetBannersHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/banner/delete", ApplyMiddlewares(http.HandlerFunc(handlers.DeleteBannerHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/banner/create", ApplyMiddlewares(http.HandlerFunc(handlers.CreateBannerHandler), middleware.WithSessionRefresh, middleware.WithCORS))
+	mux.Handle("/api/banner/update", ApplyMiddlewares(http.HandlerFunc(handlers.UpdateBannerHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/banner/reorder", ApplyMiddlewares(http.HandlerFunc(handlers.ReorderBannerHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/countingdown", ApplyMiddlewares(http.HandlerFunc(handlers.GetCountingDownHandler), middleware.WithSessionRefresh, middleware.WithCORS))
 	mux.Handle("/api/preciouslist", ApplyMiddlewares(http.HandlerFunc(handlers.GetPreciousListHandler), middleware.WithSessionRefresh, middleware.WithCORS))

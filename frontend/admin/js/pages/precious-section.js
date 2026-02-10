@@ -6,6 +6,7 @@ let isPersistingBannerOrder = false;
 let bannerRequestSeq = 0;
 let countingDownRequestSeq = 0;
 let isCreatingBanner = false;
+let isUpdatingBanner = false;
 let isSavingCountingDown = false;
 
 window.addEventListener("DOMContentLoaded", function () {
@@ -40,6 +41,22 @@ function applyCountingDownData(item, options) {
 
 function bindBannerActions() {
   document.addEventListener("click", function (e) {
+    const editTrigger = e.target.closest(".banner-edit-btn");
+    if (editTrigger) {
+      const bannerID = Number.parseInt(editTrigger.getAttribute("data-banner-id") || "", 10);
+      if (!Number.isInteger(bannerID) || bannerID <= 0) {
+        return;
+      }
+
+      const banner = bannerList.find((item) => Number(item.id) === bannerID);
+      if (!banner) {
+        return;
+      }
+
+      fillEditBannerForm(banner);
+      return;
+    }
+
     const deleteTrigger = e.target.closest(".banner-delete-trash");
     if (!deleteTrigger) {
       return;
@@ -101,6 +118,52 @@ function bindBannerActions() {
           addBannerBtn.disabled = false;
         });
     });
+  }
+
+  const saveBannerBtn = document.getElementById("save-banner-btn");
+  if (saveBannerBtn && !saveBannerBtn.dataset.bannerEditBound) {
+    saveBannerBtn.addEventListener("click", function () {
+      if (isUpdatingBanner) {
+        return;
+      }
+
+      const editPayload = getEditBannerForm();
+      if (!Number.isInteger(editPayload.id) || editPayload.id <= 0) {
+        return;
+      }
+
+      isUpdatingBanner = true;
+      saveBannerBtn.disabled = true;
+
+      fetch("/api/banner/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(editPayload),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data || !data.success) {
+            throw new Error((data && data.message) || "Update banner failed");
+          }
+
+          applyBannerList(data.data || []);
+          const modal = bootstrap.Modal.getInstance(document.getElementById("EditBannerModal"));
+          if (modal) {
+            modal.hide();
+          }
+        })
+        .catch((err) => {
+          console.error("Update banner failed:", err);
+        })
+        .finally(() => {
+          isUpdatingBanner = false;
+          saveBannerBtn.disabled = false;
+        });
+    });
+    saveBannerBtn.dataset.bannerEditBound = "1";
   }
 }
 
@@ -268,6 +331,27 @@ function clearAddBannerForm() {
       input.value = "";
     }
   });
+}
+
+function getEditBannerForm() {
+  return {
+    id: Number.parseInt(document.getElementById("edit-banner-id").value || "", 10),
+    title1: document.getElementById("edit-banner-title-1").value.trim(),
+    title2: document.getElementById("edit-banner-title-2").value.trim(),
+    subtitle: document.getElementById("edit-banner-subtitle").value.trim(),
+    url: document.getElementById("edit-banner-url").value.trim(),
+    picurl: document.getElementById("edit-banner-picture-url").value.trim(),
+  };
+}
+
+function fillEditBannerForm(item) {
+  const banner = item || {};
+  document.getElementById("edit-banner-id").value = banner.id || "";
+  document.getElementById("edit-banner-title-1").value = banner.title1 || "";
+  document.getElementById("edit-banner-title-2").value = banner.title2 || "";
+  document.getElementById("edit-banner-subtitle").value = banner.subtitle || "";
+  document.getElementById("edit-banner-url").value = banner.url || "";
+  document.getElementById("edit-banner-picture-url").value = banner.picurl || "";
 }
 
 function toDisplayText(value, fallback = "-") {
@@ -570,6 +654,15 @@ function renderBannerTable(data) {
         ${linkCellHtml}
       </td>
       <td class="text-muted">
+        <a
+          href="javascript:void(0);"
+          class="link-reset fs-20 p-1 banner-edit-btn"
+          data-banner-id="${toDisplayText(item.id, "")}"
+          data-bs-toggle="modal"
+          data-bs-target="#EditBannerModal"
+        >
+          <i class="ti ti-pencil"></i>
+        </a>
         <a
           href="javascript:void(0);"
           class="link-reset fs-20 p-1 banner-delete-trash"
