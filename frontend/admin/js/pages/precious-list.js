@@ -1,5 +1,6 @@
 window.preciousListData = [];
 let preciousInfoQuill = null;
+let preciousListRequestSeq = 0;
 
 const PRECIOUS_INDEX = {
   ID: 0,
@@ -378,7 +379,31 @@ function hideModalById(modalId) {
   }
 }
 
+function applyPreciousListData(items) {
+  const formatted = formatPreciousListData(Array.isArray(items) ? items : []);
+  preciousListData = formatted;
+  reRenderPreciousList(formatted);
+  return formatted;
+}
+
+function applyPreciousListResult(result, fallbackMessage) {
+  if (!result || !result.success) {
+    throw new Error((result && result.message) || fallbackMessage || "Operation failed");
+  }
+
+  // Invalidate older in-flight list requests so stale responses cannot overwrite new data.
+  preciousListRequestSeq += 1;
+
+  if (Array.isArray(result.data)) {
+    applyPreciousListData(result.data);
+    return Promise.resolve(result.data);
+  }
+
+  return fetchAndRenderPreciousList();
+}
+
 function fetchAndRenderPreciousList() {
+  const requestSeq = ++preciousListRequestSeq;
   return fetch("/api/preciouslist", {
     method: "GET",
     credentials: "include",
@@ -388,15 +413,20 @@ function fetchAndRenderPreciousList() {
     .then((data) => {
       if (!data || !data.success) {
         console.error("Failed to fetch precious list", data && data.message);
-        return;
+        return null;
       }
 
-      const formatted = formatPreciousListData(data.data || []);
-      preciousListData = formatted;
-      reRenderPreciousList(formatted);
+      // Ignore stale responses; a newer request or mutation has already been applied.
+      if (requestSeq !== preciousListRequestSeq) {
+        return null;
+      }
+
+      applyPreciousListData(data.data || []);
+      return data.data || [];
     })
     .catch((err) => {
       console.error("Failed to fetch precious list", err);
+      return null;
     });
 }
 
@@ -857,8 +887,17 @@ function addEventListenerAfterDOMLoaded() {
       })
         .then((res) => res.json())
         .then((data) => {
-          if (data.success) {
-            fetchAndRenderPreciousList().then(() => {
+          if (!data || !data.success) {
+            Swal.fire({
+              title: "Delete Failed",
+              text: (data && data.message) || "",
+              icon: "error",
+            });
+            return;
+          }
+
+          applyPreciousListResult(data, "Delete precious failed")
+            .then(() => {
               Swal.fire({
                 title: "Deleted",
                 text: "Precious has been deleted.",
@@ -866,17 +905,10 @@ function addEventListenerAfterDOMLoaded() {
                 timer: 1200,
                 showConfirmButton: false,
               });
-            }).catch((err) => {
+            })
+            .catch((err) => {
               console.error("Failed to refresh precious list after delete", err);
             });
-            return;
-          }
-
-          Swal.fire({
-            title: "Delete Failed",
-            text: data.message || "",
-            icon: "error",
-          });
         })
         .catch((err) => {
           console.error("Delete precious failed", err);
@@ -921,10 +953,7 @@ function AddPreciousList(payload) {
   })
     .then((response) => response.json())
     .then((result) => {
-      if (result.success) {
-        return fetchAndRenderPreciousList();
-      }
-      throw new Error((result && result.message) || "Create precious failed");
+      return applyPreciousListResult(result, "Create precious failed");
     });
 }
 
@@ -939,9 +968,6 @@ function UpdatePreciousList(payload) {
   })
     .then((response) => response.json())
     .then((result) => {
-      if (result.success) {
-        return fetchAndRenderPreciousList();
-      }
-      throw new Error((result && result.message) || "Update precious failed");
+      return applyPreciousListResult(result, "Update precious failed");
     });
 }
