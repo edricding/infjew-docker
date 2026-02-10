@@ -441,26 +441,20 @@ function updatePreciousInfoFilledFlag(preciousID, filled) {
   reRenderPreciousList(nextRows);
 }
 
-function applyPreciousListResult(result, fallbackMessage, options) {
-  const config = options || {};
-  const refetchAfterSuccess = !!config.refetchAfterSuccess;
-
+function applyPreciousListResult(result, fallbackMessage) {
   if (!result || !result.success) {
     throw new Error((result && result.message) || fallbackMessage || "Operation failed");
+  }
+
+  if (!Array.isArray(result.data)) {
+    throw new Error((fallbackMessage || "Operation failed") + " (missing list data)");
   }
 
   // Invalidate older in-flight list requests so stale responses cannot overwrite new data.
   preciousListRequestSeq += 1;
 
-  if (Array.isArray(result.data)) {
-    applyPreciousListData(result.data);
-    if (refetchAfterSuccess) {
-      return fetchAndRenderPreciousList({ strict: true }).then(() => result.data);
-    }
-    return Promise.resolve(result.data);
-  }
-
-  return fetchAndRenderPreciousList({ strict: true });
+  applyPreciousListData(result.data);
+  return Promise.resolve(result.data);
 }
 
 function fetchAndRenderPreciousList(options) {
@@ -842,12 +836,6 @@ function addEventListenerAfterDOMLoaded() {
           if (result.data && Object.prototype.hasOwnProperty.call(result.data, "precious_info_filled")) {
             updatePreciousInfoFilledFlag(preciousID, result.data.precious_info_filled);
           }
-
-          return fetchAndRenderPreciousList({ strict: true }).catch((err) => {
-            // Keep local UI state from API update response even if list sync fails once.
-            console.warn("Precious list refresh after info update failed", err);
-            return null;
-          });
         })
         .then(() => {
           hideModalById("EditPreciousInfoModal");
@@ -976,7 +964,7 @@ function addEventListenerAfterDOMLoaded() {
             return;
           }
 
-          applyPreciousListResult(data, "Delete precious failed", { refetchAfterSuccess: true })
+          applyPreciousListResult(data, "Delete precious failed")
             .then(() => {
               Swal.fire({
                 title: "Deleted",
@@ -1033,7 +1021,7 @@ function AddPreciousList(payload) {
   })
     .then((response) => parseApiJSON(response, "Create precious failed"))
     .then((result) => {
-      return applyPreciousListResult(result, "Create precious failed", { refetchAfterSuccess: true });
+      return applyPreciousListResult(result, "Create precious failed");
     });
 }
 
@@ -1048,6 +1036,6 @@ function UpdatePreciousList(payload) {
   })
     .then((response) => parseApiJSON(response, "Update precious failed"))
     .then((result) => {
-      return applyPreciousListResult(result, "Update precious failed", { refetchAfterSuccess: true });
+      return applyPreciousListResult(result, "Update precious failed");
     });
 }
