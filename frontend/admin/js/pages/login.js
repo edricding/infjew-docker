@@ -7,6 +7,39 @@
   var isSubmitting = false;
   var initialized = false;
 
+  function sanitizeNextPath(value) {
+    if (!value || typeof value !== "string") {
+      return "";
+    }
+
+    if (value.indexOf("/") !== 0 || value.indexOf("//") === 0) {
+      return "";
+    }
+
+    if (value === "/login" || value.indexOf("/login?") === 0) {
+      return "";
+    }
+
+    return value;
+  }
+
+  function getTargetPathFromQuery() {
+    try {
+      var params = new window.URLSearchParams(window.location.search || "");
+      return sanitizeNextPath(params.get("next") || "");
+    } catch (err) {
+      return "";
+    }
+  }
+
+  function buildLoginPathWithNext(nextPath) {
+    var normalized = sanitizeNextPath(nextPath);
+    if (!normalized) {
+      return "/login";
+    }
+    return "/login?next=" + encodeURIComponent(normalized);
+  }
+
   function showMsg(el, msg) {
     if (!el) {
       return;
@@ -36,20 +69,23 @@
 
     // If login HTML is served on a non-login path, normalize URL first.
     if (document.getElementById("login-submit-btn")) {
-      window.location.replace("/login");
+      var currentPath =
+        pathname + (window.location.search || "") + (window.location.hash || "");
+      window.location.replace(buildLoginPathWithNext(currentPath));
       return false;
     }
 
     return true;
   }
 
-  function redirectToDashboardOnce() {
+  function redirectToTargetOnce(targetPath) {
     if (isRedirecting) {
       return;
     }
 
     isRedirecting = true;
-    window.location.replace("/");
+    var safePath = sanitizeNextPath(targetPath) || "/";
+    window.location.replace(safePath);
   }
 
   function checkSessionReadyOnce() {
@@ -66,15 +102,16 @@
       });
   }
 
-  function redirectToDashboardWhenReady(maxAttempts, delayMs) {
+  function redirectToTargetWhenReady(maxAttempts, delayMs, targetPath) {
     var maxTry = typeof maxAttempts === "number" ? maxAttempts : 8;
     var waitMs = typeof delayMs === "number" ? delayMs : 250;
     var attempt = 0;
+    var safePath = sanitizeNextPath(targetPath) || "/";
 
     function loop() {
       return checkSessionReadyOnce().then(function (ready) {
         if (ready) {
-          redirectToDashboardOnce();
+          redirectToTargetOnce(safePath);
           return true;
         }
 
@@ -206,7 +243,7 @@
         var data = result.data;
         if (data && data.success) {
           showMsg(context.generalMsgEl, "Login succeeded. Redirecting...");
-          return redirectToDashboardWhenReady(20, 250).then(function (redirected) {
+          return redirectToTargetWhenReady(20, 250, context.targetPath).then(function (redirected) {
             if (!redirected) {
               showMsg(context.generalMsgEl, "Login succeeded, but session is not ready. Please retry.");
             }
@@ -261,11 +298,12 @@
       passMsgEl: passMsgEl,
       generalMsgEl: generalMsgEl,
       btnDefaultText: btn.textContent || "Login",
+      targetPath: getTargetPathFromQuery() || "/",
     };
 
     checkSessionReadyOnce().then(function (ready) {
       if (ready) {
-        redirectToDashboardOnce();
+        redirectToTargetOnce(context.targetPath);
       }
     });
 
