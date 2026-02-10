@@ -1,6 +1,9 @@
 window.preciousListData = [];
 let preciousInfoQuill = null;
 let preciousListRequestSeq = 0;
+let preciousGridInstance = null;
+let preciousTableRenderTimer = null;
+let preciousTableRenderSeq = 0;
 
 const PRECIOUS_INDEX = {
   ID: 0,
@@ -379,28 +382,7 @@ function hideModalById(modalId) {
   }
 }
 
-function safeJSONStringifyForLog(value, maxLength) {
-  const limit = typeof maxLength === "number" && maxLength > 0 ? maxLength : 3000;
-  let text = "";
-
-  try {
-    text = JSON.stringify(value, null, 2);
-  } catch (err) {
-    text = String(value);
-  }
-
-  if (typeof text !== "string") {
-    text = String(text);
-  }
-
-  if (text.length <= limit) {
-    return text;
-  }
-
-  return text.slice(0, limit) + "\n... (truncated)";
-}
-
-function parseApiJSON(response, fallbackMessage, debugLabel) {
+function parseApiJSON(response, fallbackMessage) {
   const message = fallbackMessage || "Request failed";
   if (!response || !response.ok) {
     const status = response && typeof response.status === "number" ? response.status : "unknown";
@@ -409,19 +391,7 @@ function parseApiJSON(response, fallbackMessage, debugLabel) {
 
   return response
     .json()
-    .then((data) => {
-      if (debugLabel) {
-        console.log(
-          "[" +
-            debugLabel +
-            "]\nHTTP status: " +
-            response.status +
-            "\nresponse data:\n" +
-            safeJSONStringifyForLog(data)
-        );
-      }
-      return data;
-    })
+    .then((data) => data)
     .catch(() => {
       throw new Error(message + " (Invalid JSON response)");
     });
@@ -489,8 +459,6 @@ function applyPreciousListResult(result, fallbackMessage) {
   // Invalidate older in-flight list requests so stale responses cannot overwrite new data.
   preciousListRequestSeq += 1;
 
-  console.log("[DEBUG] about to rerender table");
-  console.log("[DEBUG] data for rerender:\n" + safeJSONStringifyForLog(result.data));
   applyPreciousListData(result.data);
   return Promise.resolve(result.data);
 }
@@ -534,6 +502,15 @@ function fetchAndRenderPreciousList(options) {
 
 function renderPreciousList(data) {
   const container = document.getElementById("table-gridjs");
+  if (!container) {
+    return;
+  }
+
+  if (preciousGridInstance && typeof preciousGridInstance.destroy === "function") {
+    preciousGridInstance.destroy();
+    preciousGridInstance = null;
+  }
+
   container.innerHTML = "";
 
   const escapeHtmlAttr = (value) =>
@@ -561,7 +538,7 @@ function renderPreciousList(data) {
     );
   };
 
-  const preciousGrid = new gridjs.Grid({
+  preciousGridInstance = new gridjs.Grid({
     columns: [
       { name: "ID", width: "50px" },
       { name: "ItemID", width: "200px" },
@@ -649,11 +626,11 @@ function renderPreciousList(data) {
     });
   };
 
-  preciousGrid.on("ready", () => {
+  preciousGridInstance.on("ready", () => {
     initTooltips(container);
   });
 
-  preciousGrid.render(container);
+  preciousGridInstance.render(container);
   setTimeout(() => {
     initTooltips(container);
   }, 0);
@@ -676,13 +653,28 @@ function renderPreciousList(data) {
 
 function reRenderPreciousList(data) {
   const container = document.getElementById("table-gridjs");
+  if (!container) {
+    return;
+  }
+
+  const renderSeq = ++preciousTableRenderSeq;
+  if (preciousTableRenderTimer) {
+    clearTimeout(preciousTableRenderTimer);
+    preciousTableRenderTimer = null;
+  }
+
   container.classList.remove("fade-in");
   container.classList.add("fade-out");
 
-  setTimeout(() => {
+  preciousTableRenderTimer = setTimeout(() => {
+    if (renderSeq !== preciousTableRenderSeq) {
+      preciousTableRenderTimer = null;
+      return;
+    }
     renderPreciousList(data);
     container.classList.remove("fade-out");
     container.classList.add("fade-in");
+    preciousTableRenderTimer = null;
   }, 300);
 }
 
