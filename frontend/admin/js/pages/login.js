@@ -2,7 +2,9 @@
   "use strict";
 
   var RECAPTCHA_SITE_KEY = "6LeLHmAsAAAAAIMDu4IcbDpVMrSn0QU4u0EyKHVr";
+  var RECAPTCHA_TIMEOUT_MS = 15000;
   var isRedirecting = false;
+  var isSubmitting = false;
   var initialized = false;
 
   function showMsg(el, msg) {
@@ -24,6 +26,21 @@
     return new Promise(function (resolve) {
       window.setTimeout(resolve, ms);
     });
+  }
+
+  function ensureCanonicalLoginPath() {
+    var pathname = (window.location && window.location.pathname) || "";
+    if (pathname === "/login") {
+      return true;
+    }
+
+    // If login HTML is served on a non-login path, normalize URL first.
+    if (document.getElementById("login-submit-btn")) {
+      window.location.replace("/login");
+      return false;
+    }
+
+    return true;
   }
 
   function redirectToDashboardOnce() {
@@ -73,9 +90,66 @@
     return loop();
   }
 
+  function setSubmitting(context, submitting, processingMessage) {
+    var message = processingMessage || "";
+    isSubmitting = submitting;
+    context.btn.disabled = submitting;
+    context.usernameEl.disabled = submitting;
+    context.passwordEl.disabled = submitting;
+    context.btn.textContent = submitting ? "Please wait..." : context.btnDefaultText;
+
+    if (submitting && message) {
+      showMsg(context.generalMsgEl, message);
+    }
+  }
+
+  function executeRecaptchaToken() {
+    return new Promise(function (resolve, reject) {
+      if (
+        !window.grecaptcha ||
+        typeof window.grecaptcha.ready !== "function" ||
+        typeof window.grecaptcha.execute !== "function"
+      ) {
+        reject(new Error("reCAPTCHA not ready"));
+        return;
+      }
+
+      var finished = false;
+      var timeoutId = window.setTimeout(function () {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        reject(new Error("reCAPTCHA timeout"));
+      }, RECAPTCHA_TIMEOUT_MS);
+
+      function once(cb) {
+        return function (value) {
+          if (finished) {
+            return;
+          }
+          finished = true;
+          window.clearTimeout(timeoutId);
+          cb(value);
+        };
+      }
+
+      window.grecaptcha.ready(function () {
+        if (typeof window.grecaptcha.execute !== "function") {
+          once(reject)(new Error("reCAPTCHA not ready"));
+          return;
+        }
+
+        window.grecaptcha
+          .execute(RECAPTCHA_SITE_KEY, { action: "login" })
+          .then(once(resolve))
+          .catch(once(reject));
+      });
+    });
+  }
+
   function submitLogin(context) {
-    var btn = context.btn;
-    if (btn.disabled) {
+    if (isSubmitting || isRedirecting) {
       return;
     }
 
@@ -99,53 +173,63 @@
       return;
     }
 
-    btn.disabled = true;
+    setSubmitting(context, true, "Verifying reCAPTCHA...");
 
-    if (!window.grecaptcha || typeof window.grecaptcha.ready !== "function") {
-      showMsg(context.generalMsgEl, "reCAPTCHA not ready.");
-      btn.disabled = false;
-      return;
-    }
-
-    window.grecaptcha.ready(function () {
-      window.grecaptcha
-        .execute(RECAPTCHA_SITE_KEY, { action: "login" })
-        .then(function (token) {
-          return fetch("/api/AuthLogin", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              username: username,
-              password: password,
-              recaptchaToken: token,
-            }),
-          });
-        })
-        .then(function (res) {
-          return res.json();
-        })
-        .then(function (data) {
-          if (data && data.success) {
-            return redirectToDashboardWhenReady(8, 250).then(function (redirected) {
-              if (!redirected) {
-                showMsg(context.generalMsgEl, "Login succeeded, but session is not ready. Please retry.");
-              }
-            });
-          }
-
-          showMsg(context.generalMsgEl, (data && data.message) || "Login failed");
-        })
-        .catch(function (err) {
-          console.error("Login failed", err);
-          showMsg(context.generalMsgEl, "Login failed");
-        })
-        .finally(function () {
-          btn.disabled = false;
+    executeRecaptchaToken()
+      .then(function (token) {
+        return fetch("/api/AuthLogin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            username: username,
+            password: password,
+            recaptchaToken: token,
+          }),
         });
-    });
+      })
+      .then(function (res) {
+        return res
+          .json()
+          .catch(function () {
+            return null;
+          })
+          .then(function (data) {
+            return {
+              data: data,
+            };
+          });
+      })
+      .then(function (result) {
+        var data = result.data;
+        if (data && data.success) {
+          showMsg(context.generalMsgEl, "Login succeeded. Redirecting...");
+          return redirectToDashboardWhenReady(20, 250).then(function (redirected) {
+            if (!redirected) {
+              showMsg(context.generalMsgEl, "Login succeeded, but session is not ready. Please retry.");
+            }
+          });
+        }
+
+        showMsg(context.generalMsgEl, (data && data.message) || "Login failed");
+      })
+      .catch(function (err) {
+        var message = "Login failed";
+        if (err && err.message === "reCAPTCHA not ready") {
+          message = "reCAPTCHA not ready.";
+        } else if (err && err.message === "reCAPTCHA timeout") {
+          message = "reCAPTCHA timeout. Please retry.";
+        }
+        console.error("Login failed", err);
+        showMsg(context.generalMsgEl, message);
+      })
+      .finally(function () {
+        if (!isRedirecting) {
+          setSubmitting(context, false);
+        }
+      });
   }
 
   function initYear() {
@@ -163,7 +247,7 @@
     var userMsgEl = document.getElementById("login-username-msg");
     var passMsgEl = document.getElementById("login-password-msg");
     var generalMsgEl = document.getElementById("login-general-msg");
-    var loginForm = document.querySelector("form.needs-validation");
+    var loginForm = document.getElementById("login-form") || document.querySelector("form.needs-validation");
 
     if (!btn || !usernameEl || !passwordEl) {
       return;
@@ -176,6 +260,7 @@
       userMsgEl: userMsgEl,
       passMsgEl: passMsgEl,
       generalMsgEl: generalMsgEl,
+      btnDefaultText: btn.textContent || "Login",
     };
 
     checkSessionReadyOnce().then(function (ready) {
@@ -184,23 +269,40 @@
       }
     });
 
-    btn.addEventListener("click", function () {
+    btn.addEventListener("click", function (e) {
+      if (e) {
+        e.preventDefault();
+      }
       submitLogin(context);
     });
 
     if (loginForm) {
-      loginForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-        submitLogin(context);
+      // Capture submit first to prevent any other global submit handler from reloading the page.
+      loginForm.addEventListener(
+        "submit",
+        function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          submitLogin(context);
+        },
+        true
+      );
+    }
+
+    function bindEnterSubmit(inputEl) {
+      if (!inputEl) {
+        return;
+      }
+      inputEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          submitLogin(context);
+        }
       });
     }
 
-    passwordEl.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        submitLogin(context);
-      }
-    });
+    bindEnterSubmit(usernameEl);
+    bindEnterSubmit(passwordEl);
   }
 
   function initialize() {
@@ -208,6 +310,10 @@
       return;
     }
     initialized = true;
+
+    if (!ensureCanonicalLoginPath()) {
+      return;
+    }
 
     initYear();
     initLoginPage();
