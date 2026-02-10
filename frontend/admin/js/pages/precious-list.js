@@ -379,7 +379,7 @@ function hideModalById(modalId) {
   }
 }
 
-function safeJSONStringifyForAlert(value, maxLength) {
+function safeJSONStringifyForLog(value, maxLength) {
   const limit = typeof maxLength === "number" && maxLength > 0 ? maxLength : 3000;
   let text = "";
 
@@ -411,13 +411,13 @@ function parseApiJSON(response, fallbackMessage, debugLabel) {
     .json()
     .then((data) => {
       if (debugLabel) {
-        alert(
+        console.log(
           "[" +
             debugLabel +
-            "]\nHTTP状态: " +
+            "]\nHTTP status: " +
             response.status +
-            "\n返回data:\n" +
-            safeJSONStringifyForAlert(data)
+            "\nresponse data:\n" +
+            safeJSONStringifyForLog(data)
         );
       }
       return data;
@@ -489,8 +489,8 @@ function applyPreciousListResult(result, fallbackMessage) {
   // Invalidate older in-flight list requests so stale responses cannot overwrite new data.
   preciousListRequestSeq += 1;
 
-  alert("我要刷新了");
-  alert("准备渲染的数据:\n" + safeJSONStringifyForAlert(result.data));
+  console.log("[DEBUG] about to rerender table");
+  console.log("[DEBUG] data for rerender:\n" + safeJSONStringifyForLog(result.data));
   applyPreciousListData(result.data);
   return Promise.resolve(result.data);
 }
