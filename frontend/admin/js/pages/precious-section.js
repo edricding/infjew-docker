@@ -76,6 +76,7 @@ window.addEventListener("DOMContentLoaded", function () {
               document.getElementById("AddBannerModal")
             );
             if (modal) modal.hide();
+            clearAddBannerForm();
           } else {
             console.error(" : ", data.message);
           }
@@ -120,6 +121,23 @@ function getAddBannerForm() {
     picurl: document.getElementById("add-banner-picture-url").value.trim(),
   };
   return newBanner;
+}
+
+function clearAddBannerForm() {
+  const fieldIds = [
+    "add-banner-title-1",
+    "add-banner-title-2",
+    "add-banner-subtitle",
+    "add-banner-url",
+    "add-banner-picture-url",
+  ];
+
+  fieldIds.forEach((id) => {
+    const input = document.getElementById(id);
+    if (input) {
+      input.value = "";
+    }
+  });
 }
 
 function toDisplayText(value, fallback = "-") {

@@ -198,7 +198,7 @@ function updatePreciousInfo(payload) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
-  }).then((response) => response.json());
+  }).then((response) => parseApiJSON(response, "Update precious info failed"));
 }
 
 function initializePreciousMetaOptions() {
@@ -379,6 +379,18 @@ function hideModalById(modalId) {
   }
 }
 
+function parseApiJSON(response, fallbackMessage) {
+  const message = fallbackMessage || "Request failed";
+  if (!response || !response.ok) {
+    const status = response && typeof response.status === "number" ? response.status : "unknown";
+    throw new Error(message + " (HTTP " + status + ")");
+  }
+
+  return response.json().catch(() => {
+    throw new Error(message + " (Invalid JSON response)");
+  });
+}
+
 function applyPreciousListData(items) {
   const formatted = formatPreciousListData(Array.isArray(items) ? items : []);
   preciousListData = formatted;
@@ -386,7 +398,53 @@ function applyPreciousListData(items) {
   return formatted;
 }
 
-function applyPreciousListResult(result, fallbackMessage) {
+function updatePreciousInfoFilledFlag(preciousID, filled) {
+  const normalizedID = Number.parseInt(preciousID, 10);
+  if (!Number.isInteger(normalizedID) || normalizedID <= 0) {
+    return;
+  }
+
+  const normalizedFilled = Number(filled) === 1 ? 1 : 0;
+  let changed = false;
+
+  const nextRows = preciousListData.map((row) => {
+    if (!Array.isArray(row) || Number(row[PRECIOUS_INDEX.ID]) !== normalizedID) {
+      return row;
+    }
+
+    const nextRow = row.slice();
+    const actionData = nextRow[PRECIOUS_INDEX.ACTION_ID];
+    const nextAction =
+      actionData && typeof actionData === "object"
+        ? Object.assign({}, actionData)
+        : { id: normalizedID, precious_info_filled: 0 };
+
+    if (Number(nextAction.id) !== normalizedID) {
+      nextAction.id = normalizedID;
+      changed = true;
+    }
+
+    if (Number(nextAction.precious_info_filled) !== normalizedFilled) {
+      nextAction.precious_info_filled = normalizedFilled;
+      changed = true;
+    }
+
+    nextRow[PRECIOUS_INDEX.ACTION_ID] = nextAction;
+    return nextRow;
+  });
+
+  if (!changed) {
+    return;
+  }
+
+  preciousListData = nextRows;
+  reRenderPreciousList(nextRows);
+}
+
+function applyPreciousListResult(result, fallbackMessage, options) {
+  const config = options || {};
+  const refetchAfterSuccess = !!config.refetchAfterSuccess;
+
   if (!result || !result.success) {
     throw new Error((result && result.message) || fallbackMessage || "Operation failed");
   }
@@ -396,23 +454,32 @@ function applyPreciousListResult(result, fallbackMessage) {
 
   if (Array.isArray(result.data)) {
     applyPreciousListData(result.data);
+    if (refetchAfterSuccess) {
+      return fetchAndRenderPreciousList({ strict: true }).then(() => result.data);
+    }
     return Promise.resolve(result.data);
   }
 
-  return fetchAndRenderPreciousList();
+  return fetchAndRenderPreciousList({ strict: true });
 }
 
-function fetchAndRenderPreciousList() {
+function fetchAndRenderPreciousList(options) {
+  const config = options || {};
+  const strict = !!config.strict;
   const requestSeq = ++preciousListRequestSeq;
   return fetch("/api/preciouslist", {
     method: "GET",
     credentials: "include",
     cache: "no-store",
   })
-    .then((res) => res.json())
+    .then((res) => parseApiJSON(res, "Failed to fetch precious list"))
     .then((data) => {
       if (!data || !data.success) {
-        console.error("Failed to fetch precious list", data && data.message);
+        const message = (data && data.message) || "Failed to fetch precious list";
+        console.error("Failed to fetch precious list", message);
+        if (strict) {
+          throw new Error(message);
+        }
         return null;
       }
 
@@ -426,6 +493,9 @@ function fetchAndRenderPreciousList() {
     })
     .catch((err) => {
       console.error("Failed to fetch precious list", err);
+      if (strict) {
+        throw err;
+      }
       return null;
     });
 }
@@ -767,7 +837,17 @@ function addEventListenerAfterDOMLoaded() {
           }
 
           fillPreciousInfoModal(result.data);
-          return fetchAndRenderPreciousList();
+
+          // Optimistically reflect the backend-computed filled flag immediately.
+          if (result.data && Object.prototype.hasOwnProperty.call(result.data, "precious_info_filled")) {
+            updatePreciousInfoFilledFlag(preciousID, result.data.precious_info_filled);
+          }
+
+          return fetchAndRenderPreciousList({ strict: true }).catch((err) => {
+            // Keep local UI state from API update response even if list sync fails once.
+            console.warn("Precious list refresh after info update failed", err);
+            return null;
+          });
         })
         .then(() => {
           hideModalById("EditPreciousInfoModal");
@@ -885,7 +965,7 @@ function addEventListenerAfterDOMLoaded() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: id }),
       })
-        .then((res) => res.json())
+        .then((res) => parseApiJSON(res, "Delete precious failed"))
         .then((data) => {
           if (!data || !data.success) {
             Swal.fire({
@@ -896,7 +976,7 @@ function addEventListenerAfterDOMLoaded() {
             return;
           }
 
-          applyPreciousListResult(data, "Delete precious failed")
+          applyPreciousListResult(data, "Delete precious failed", { refetchAfterSuccess: true })
             .then(() => {
               Swal.fire({
                 title: "Deleted",
@@ -951,9 +1031,9 @@ function AddPreciousList(payload) {
     },
     body: JSON.stringify(payload),
   })
-    .then((response) => response.json())
+    .then((response) => parseApiJSON(response, "Create precious failed"))
     .then((result) => {
-      return applyPreciousListResult(result, "Create precious failed");
+      return applyPreciousListResult(result, "Create precious failed", { refetchAfterSuccess: true });
     });
 }
 
@@ -966,8 +1046,8 @@ function UpdatePreciousList(payload) {
     },
     body: JSON.stringify(payload),
   })
-    .then((response) => response.json())
+    .then((response) => parseApiJSON(response, "Update precious failed"))
     .then((result) => {
-      return applyPreciousListResult(result, "Update precious failed");
+      return applyPreciousListResult(result, "Update precious failed", { refetchAfterSuccess: true });
     });
 }
