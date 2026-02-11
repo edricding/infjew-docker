@@ -14761,7 +14761,7 @@ html[data-bs-theme=dark] #light-dark-mode .ti-moon::before {
   cursor: default;
   white-space: nowrap;
   text-transform: uppercase;
-  color: var(--bs-menu-item-color);
+  color: #4e4e4e;
   font-weight: 700;
   font-size: calc(var(--bs-menu-item-font-size) * 0.7);
   padding: var(--bs-menu-item-padding-y) calc(var(--bs-menu-item-padding-x) * 1.75);
